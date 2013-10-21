@@ -1706,6 +1706,15 @@ $as_echo_n "checking localstatedir... " >&6; }
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $localstatedir" >&5
 $as_echo "$localstatedir" >&6; }
 
+if test "x$libexecdir" = 'x${exec_prefix}/libexec' ; then
+    libexecdir='${exec_prefix}/libexec/${PACKAGE_NAME}'
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking libexecdir" >&5
+$as_echo_n "checking libexecdir... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $libexecdir" >&5
+$as_echo "$libexecdir" >&6; }
+
 if test "x$datadir" = 'x${datarootdir}' ; then
     datadir='${datarootdir}/${PACKAGE_NAME}'
 

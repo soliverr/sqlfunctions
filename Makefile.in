@@ -129,16 +129,17 @@ clean:
 	-rm -fv oradba-exec-sql.1.gz oradba-exec-sql.ru.1.gz
 	-rm -fv logrotate.conf crontab.daily exec_sql oradba-crontab sql-functions
 	-rm -fv Makefile config.h config.status config.cache config.log build_expand.sh
-	fakeroot debian/rules clean || true
 
 distclean: clean
 	-rm -rf autom4te.cache
 	-find . -type f -iwholename '*~' -exec rm -fv {} ';'
 	if [ -d test ]; then rm -rf test; fi
+	if [ -d inst ]; then rm -rf inst; fi
 
-mostlyclean: clean
+mostlyclean: distclean
 
-maintainer-clean: clean
+maintainer-clean: distclean
+	fakeroot debian/rules clean || true
 
 # automatic re-running of configure if the configure.ac file has changed
 ${srcdir}/configure: configure.ac

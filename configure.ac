@@ -22,6 +22,12 @@ fi
 AC_MSG_CHECKING(localstatedir)
 AC_MSG_RESULT($localstatedir)
 
+if test "x$libexecdir" = 'x${exec_prefix}/libexec' ; then
+    AC_SUBST(libexecdir, '${exec_prefix}/libexec/${PACKAGE_NAME}')
+fi
+AC_MSG_CHECKING(libexecdir)
+AC_MSG_RESULT($libexecdir)
+
 if test "x$datadir" = 'x${datarootdir}' ; then
     AC_SUBST(datadir, '${datarootdir}/${PACKAGE_NAME}')
 fi
