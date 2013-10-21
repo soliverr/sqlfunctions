@@ -1,0 +1,31 @@
+#! /bin/sh
+#
+# Clean spool and log directories
+#
+
+# Package identification ---------------------------------------------------------------
+PACKAGE_NAME="@PACKAGE_NAME@"
+PACKAGE_VERSION="@PACKAGE_VERSION@"
+PACKAGE_STRING="@PACKAGE_STRING@"
+
+# Base directories ---------------------------------------------------------------------
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+libexecdir=@libexecdir@
+sysconfdir=@sysconfdir@
+confdir=@confdir@
+localstatedir=@localstatedir@
+datarootdir=@datarootdir@
+datadir=@datadir@
+logdir=@logdir@
+spooldir=@spooldir@
+config=$confdir/oradba-exec-sql.conf
+
+[ -r $config ] && . $config || exit 1
+
+test -z "$OLD_LOG_KEEP_DAYS" -o "$OLD_LOG_KEEP_DAYS" -gt 0 2>/dev/null || OLD_LOG_KEEP_DAYS=30
+
+find $logdir -type f -mtime +$OLD_LOG_KEEP_DAYS -exec rm -f {} \;
+find $spooldir -type f -mtime +$OLD_LOG_KEEP_DAYS -exec rm -f {} \;
+find $LOG_DIR -type f -mtime +$OLD_LOG_KEEP_DAYS -exec rm -f {} \;

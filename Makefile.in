@@ -1,0 +1,152 @@
+#
+
+SHELL           = /bin/bash
+INSTALL         = install
+top_srcdir      = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+
+# Package identification ---------------------------------------------------------------
+PACKAGE_NAME    = @PACKAGE_NAME@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_STRING  = @PACKAGE_STRING@
+
+# Base directories ---------------------------------------------------------------------
+prefix          = @prefix@
+exec_prefix     = @exec_prefix@
+sbindir         = @sbindir@
+bindir          = @bindir@
+libdir          = @libdir@
+liblsb          = @liblsb@
+libexecdir      = @libexecdir@
+sysconfdir      = @sysconfdir@
+confdir         = @confdir@
+localstatedir   = @localstatedir@
+datarootdir     = @datarootdir@
+datadir         = @datadir@
+logdir          = @logdir@
+docdir          = @docdir@
+mandir          = @mandir@
+man1dir         = @mandir@/man1
+man1rudir       = @mandir@/ru/man1
+spooldir        = @spooldir@
+
+# Destination dir
+DESTDIR         =
+
+.PHONY: expand
+.PHONY: install install-dirs install-base-dirs install-docs install-man install-files install-logrotate install-config install-sql install-sh
+.PHONY: install-crontabs install-crontabs-hourly install-crontabs-daily install-crontabs-weekly install-crontabs-monthly
+.PHONY: clean distclean mostlyclean
+
+install: expand install-dirs install-docs install-files
+
+expand:
+	chmod +x $(srcdir)/build_expand.sh
+	$(srcdir)/build_expand.sh logrotate.conf
+
+
+install-base-dirs:
+	# Create base directories
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(liblsb)
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(sysconfdir)
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(confdir)
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(bindir)
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(spooldir)
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(logdir)
+
+install-dirs: install-base-dirs
+	# Create package directories
+
+install-docs: install-man
+	# Create documentation directories
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(docdir)
+	# Install doc files
+	if [ -r README ] ; then $(INSTALL) --mode 0644 README $(DESTDIR)$(docdir) ; fi
+
+install-man:
+	# Install man pages
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(man1dir)
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(man1rudir)
+	gzip -c exec_sql.1 > oradba-exec-sql.1.gz
+	gzip -c exec_sql.ru.1 > oradba-exec-sql.ru.1.gz
+	$(INSTALL) --mode 0644 oradba-exec-sql.ru.1.gz $(DESTDIR)$(man1rudir)/oradba-exec-sql.1.gz
+	$(INSTALL) --mode 0644 oradba-exec-sql.1.gz $(DESTDIR)$(man1dir)/oradba-exec-sql.1.gz
+
+install-files: install-config install-sql install-sh install-logrotate install-crontabs
+	# Install files
+	$(INSTALL) --mode 644 sql-functions $(DESTDIR)$(liblsb)/oradba-sqlfunctions
+	$(INSTALL) --mode 755 oradba-crontab $(DESTDIR)$(bindir)/oradba-crontab
+
+install-config:
+	# Install config files
+	if [ -r config.vars ] ; then \
+	    $(INSTALL) --mode 664 config.vars $(DESTDIR)$(confdir)/oradba-exec-sql.conf ; \
+	fi
+	$(INSTALL) --mode 664 sql-functions.def $(DESTDIR)$(confdir)/oradba-sqlfunctions.def
+
+install-sql:
+	# Install sql-files
+
+install-sh:
+	# Install scripts
+	$(INSTALL) --mode 755 exec_sql $(DESTDIR)$(bindir)/oradba-exec-sql
+
+install-logrotate:
+	# Install logrotate configuration
+	if [ -f logrotate.conf ] ; then \
+	    $(INSTALL) -D --mode 644 logrotate.conf $(DESTDIR)$(sysconfdir)/logrotate.d/oradba-exec-sql.conf; \
+	fi
+
+install-crontabs: install-crontabs-hourly install-crontabs-daily install-crontabs-weekly install-crontabs-monthly
+	# Install cron jobs
+	if [ -f crontab.d ] ; then \
+	    $(INSTALL) -D --mode 644 crontab.d $(DESTDIR)$(sysconfdir)/cron.d/oradba-exec-sql ; \
+	fi
+
+install-crontabs-hourly:
+	if [ -f crontab.hourly ] ; then \
+	    $(INSTALL) -D --mode 755 crontab.hourly $(DESTDIR)$(sysconfdir)/cron.hourly/oradba-exec-sql ; \
+	fi
+
+install-crontabs-daily:
+	if [ -f crontab.daily ] ; then \
+	    $(INSTALL) -D --mode 755 crontab.daily $(DESTDIR)$(sysconfdir)/cron.daily/oradba-exec-sql ; \
+	fi
+
+install-crontabs-weekly:
+	if [ -f crontab.weekly ] ; then \
+	    $(INSTALL) -D --mode 755 crontab.weekly $(DESTDIR)$(sysconfdir)/cron.weekly/oradba-exec-sql ; \
+	fi
+
+install-crontabs-monthly:
+	if [ -f crontab.monthly ] ; then \
+	    $(INSTALL) -D --mode 755 crontab.monthly $(DESTDIR)$(sysconfdir)/cron.monthly/oradba-exec-sql ; \
+	fi
+
+clean:
+	-rm -fv oradba-exec-sql.1.gz oradba-exec-sql.ru.1.gz
+	-rm -fv logrotate.conf crontab.daily exec_sql oradba-crontab sql-functions
+	-rm -fv Makefile config.h config.status config.cache config.log build_expand.sh
+	fakeroot debian/rules clean || true
+
+distclean: clean
+	-rm -rf autom4te.cache
+	-find . -type f -iwholename '*~' -exec rm -fv {} ';'
+	if [ -d test ]; then rm -rf test; fi
+
+mostlyclean: clean
+
+maintainer-clean: clean
+
+# automatic re-running of configure if the configure.ac file has changed
+${srcdir}/configure: configure.ac
+	cd ${srcdir} && autoconf
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+

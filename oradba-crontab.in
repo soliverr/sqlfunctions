@@ -1,0 +1,178 @@
+#! /bin/bash
+#
+# Control crontab tasks for oradba packages
+#
+# Use:
+#
+#    oradba-crontab --add|--del|--upd|--chk path_to_cron_d_file
+#
+#
+
+source @liblsb@/orabase-functions 2>&- || { echo "File @liblsb@/orabase-functions is not exists" >&2 ; exit 1; }
+
+# Операционные переменные --------------------------------------------------------------
+exe_name=$0
+BASE_DIR=`dirname $exe_name`
+EXE_NAME=$exe_name
+CRON_USER=oracle
+
+# Глобальные переменные ----------------------------------------------------------------
+#
+export EXE_NAME
+
+# Процедуры и функции ------------------------------------------------------------------
+usage() {
+  cat << __EOFF__
+
+Add, remove, change, update crontab jobs for user $CRON_USER.
+
+Use:  $0 --add|--del|--upd script_name [sript_name ...]
+   --add                -- Add content of script_name file into users' crontab
+   --del | --delete     -- Remove content of script_name file from users' crontab
+   --upd | --update     -- Update content of script_name file from users' crontab
+   --chk | --check      -- Check existence of content of script_name file into users' crontab
+
+   sript_name           -- cron.d formatted file
+
+__EOFF__
+}
+
+add_func() {
+    local file="$1"
+    local fname=`basename $file`
+    local tmpfile=/tmp/crontab$$
+    local rc
+
+    crontab -u $CRON_USER -l  > $tmpfile
+    rc=$?
+    if ! grep --silent --no-message "^## -= $file" $tmpfile ; then
+        # Add new content
+        sed --in-place -e '/^# End-of-file #/d' $tmpfile
+        echo >> $tmpfile
+        echo "## -= $fname : oradba-crontab start =- ##" >> $tmpfile
+        cat $file >> $tmpfile
+        echo "## -= $name : oradba-crontab end =- ##"  >> $tmpfile
+        echo >> $tmpfile
+        echo -n "# End-of-file #" >> $tmpfile
+
+        # Install new crontab file
+        crontab -u $CRON_USER $tmpfile
+        rc=$?
+    fi
+
+    [ -f $tmpfile ] && rm -f $tmpfile
+
+    return $rc
+}
+
+del_func() {
+    local file="$1"
+    local fname=`basename $file`
+    local tmpfile=/tmp/crontab$$
+    local rc
+
+    crontab -u $CRON_USER -l > $tmpfile
+    rc=$?
+    if grep --silent --no-message "^## -= $file" $tmpfile ; then
+        # Delete content
+        bs=`grep --line-number "^## -= $fname : oradba-crontab start =- ##" $tmpfile | cut -d ':' -f 1 || echo 0`
+        be=`grep --line-number "^## -= $fname : oradba-crontab end =- ##" $tmpfile | cut -d ':' -f 1 || echo 0`
+        if [ -n "$bs" -a -n "$be" -a $bs -gt 0 -a $be -gt $bs ] ; then
+            sed --in-place "$bs,$be d" $tmpfile
+
+            # Install new crontab file
+            crontab -u $CRON_USER $tmpfile
+            rc=$?
+        else
+            rc=0
+        fi
+    fi
+
+    [ -f $tmpfile ] && rm -f $tmpfile
+
+    return $rc
+}
+
+chk_func() {
+    local file="$1"
+    local fname=`basename $file`
+    local rc
+
+    crontab -u $CRON_USER -l | grep --silent --no-message "^## -= $fname" >/dev/null
+    #FIXME: check content with diff
+    rc=$?
+
+    return $rc
+}
+
+# Main program =========================================================================
+
+# Set output mode
+if [ -z "$TERM" -o "$TERM" = "dumb" ]; then
+   # Disable output to console
+   export ORABASE_QUIET="TRUE"
+fi
+
+TEMP=`getopt -o h --long help,add,del,delete,upd,update,chk,check \
+             -n "$exe_name" -- "$@"`
+
+[ $? != 0 ] && orabase_error_exit "Terminating..."
+
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        --add) mode=add ; shift ;;
+        --del|--delete) mode=del ; shift ;;
+        --upd|--update) mode=upd ; shift ;;
+        --chk|--check)  mode=chk ; shift ;;
+        -h|--help) usage; exit 0 ;;
+        --) shift ; break ;;
+        *) orabase_error_exit "Internal error!" ;;
+    esac
+done
+
+for file do
+    if [ ! -r $file ]; then
+        orabase_error "Can't read file $file"
+        [ "$mode" = "add" -o "$mode" = "upd" ] && continue
+    fi
+
+    case "$mode" in
+      add ) add_func "$file"
+            rc=$?
+            if [ $rc -eq 0 ] ; then
+                orabase_okay "Content of file $file added"
+            else
+                orabase_error "Error while adding content of file $file"
+            fi
+      ;;
+      del ) del_func "$file"
+            rc=$?
+            if [ $rc -eq 0 ] ; then
+                orabase_okay "Content of file $file removed"
+            else
+                orabase_error "Error while removing content of file $file"
+            fi
+      ;;
+      upd ) del_func "$file"
+            add_func "$file"
+            rc=$?
+            if [ $rc -eq 0 ] ; then
+                orabase_okay "Content of file $file updated"
+            else
+                orabase_error "Error while updating content of file $file"
+            fi
+      ;;
+      chk ) chk_func "$file"
+            rc=$?
+            if [ $rc -eq 0 ] ; then
+              orabase_okay "Content of file $file exists into crontab"
+            else
+              orabase_error "Content of file $file is not exists into crontab"
+            fi
+      ;;
+      * ) usage; exit 1;
+    esac
+done
+

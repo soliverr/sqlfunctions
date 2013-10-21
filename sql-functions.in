@@ -1,0 +1,282 @@
+#
+# Functions library
+#
+
+# Create temporary file
+#
+# Usage:
+#       orasql_mktemp [file_name]
+#
+orasql_mktemp() {
+    local fname=${1:-orasql_mktemp}
+    local sdir tmpfile
+
+    if [ -n "$pkgspooldir" -a -w "$pkgspooldir" ] ; then
+       sdir="$pkgspooldir"
+    elif [ -n "$spooldir" -a -w "$spooldir" ] ; then
+       sdir="$spooldir"
+    elif [ -n "$logdir" -a -w "$logdir" ] ; then
+       sdir="$logdir"
+    else
+       sdir="/tmp"
+    fi
+
+    tmpfile="$sdir/$fname.$$"
+    touch $tmpfile 2>/dev/null && chmod 600 $tmpfile 2>/dev/null
+
+    if [ ! -r "$tmpfile" ] ; then
+        orabase_error "Can't create temporary file: $tmpfile"
+        tmpfile=
+    fi
+    echo "$tmpfile"
+}
+
+# Get password from OPR
+#
+# Usage:
+#       orasql_password_get database db_username
+#
+orasql_password_get() {
+    local odb=${1:-$DB}
+    local dbuser=${2:-$DB_USER}
+    local pwd=""
+    local opr=${OPR:-/usr/sbin/opr}
+
+    if [ -x $opr ] ; then
+        pwd="`$opr -r $odb $dbuser 2>/dev/null`"
+    else
+       orabase_warn "Can't find opr executable: $opr"
+    fi
+
+    echo "$pwd"
+}
+
+# Set or update password in OPR repository
+#
+# Usage:
+#       orasql_password_set database db_username os_username pwd_file [force]
+#
+orasql_password_set() {
+    local odb=${1:-$DB}
+    local dbuser=${2:-$DB_USER}
+    local osuser=${3:-$USER}
+    local pwdfile=$4
+    local force=$5
+    local pwd=""    
+    local tmpfile
+    local userlist u
+    local opr=${OPR:-/usr/sbin/opr}
+    local TIMELIMIT=
+
+    if [ ! -x "$opr" ] ; then
+       orabase_error "Can't find opr executable: $opr"
+       return 1
+    fi
+
+    if [ ! -r "$pwdfile" ] ; then
+       orabase_error "Can't read file: $pwdfile"
+       return 1
+    fi
+
+    if [ -z "`cat $pwdfile | head -1`" ] ; then
+       orabase_error "No password defined in file: $pwdfile"
+       return 1
+    fi
+
+    [ -n "$force" ] && force="-f"
+
+    tmpfile=`orasql_mktemp orasql_password_set`
+
+    pwd=`$opr -l | grep -i "$odb[[:space:]]\+$dbuser[[:space:]]\+$osuser"`
+
+    # Set timelimit environment
+    [ -n "$WARNTIME" ] && TIMELIMIT="$TIMELIMIT -t$WARNTIME"
+    [ -n "$KILLTIME" ] && TIMELIMIT="$TIMELIMIT -T$KILLTIME"
+    [ -n "$WARNSIG" ] && TIMELIMIT="$TIMELIMIT -s$WARNSIG"
+    [ -n "$KILLSIG" ] && TIMELIMIT="$TIMELIMIT -S$KILLSIG"
+    [ -n "$TIMELIMIT" ] && TIMELIMIT="/usr/bin/timelimit -q $TIMELIMIT --"
+
+    if [ -n "$pwd" ] ; then
+        echo "Change password: $opr -m $force $odb $dbuser" > $tmpfile
+        if [ -z "$force" ] ; then
+            cat $pwdfile | sed -n -e '1p;1p' | $TIMELIMIT $opr -m $odb $dbuser >>$tmpfile 2>&1
+            if ! grep -s -q 'entries modified.' $tmpfile ; then
+                orabase_error "Error while change password: "
+                cat $tmpfile | while read l ; do
+                    orabase_error "  $l"
+                done
+                rm -f $tmpfile
+                return 1
+            fi
+        else
+            echo "Force mode" >> $tmpfile
+            userlist="`$opr -l | sed -n -e "s/$odb[[:space:]]\+$dbuser\+[[:space:]]\+\(\w\+\)/\1/ip" | sed -e 's/\n/ /g' | sed -e 's/\n/ /g; s/ \+$//; s/ \+/ /g'`"
+            echo "Deleting OPR entries for $userlist" >> $tmpfile
+            for u in $userlist ; do
+                $opr -d $odb $dbuser $u >> $tmpfile 2>&1
+            done
+            echo "Adding OPR entries for $userlist" >> $tmpfile
+            for u in $userlist ; do
+                cat $pwdfile | sed -n -e '1p;1p' | $TIMELIMIT $opr -a -f $odb $dbuser $u >>$tmpfile 2>&1
+            done
+            if ! grep -s -q 'entry (.*) added' $tmpfile ; then
+                orabase_error "Errors while change password in force mode: "
+                cat $tmpfile | while read l ; do
+                    orabase_error "  $l"
+                done
+                rm -f $tmpfile
+                return 1
+            fi
+        fi
+    else
+        echo "Add password: $opr -a $force $odb $dbuser $osuser" > $tmpfile
+        cat $pwdfile | sed -n -e '1p;1p' | $TIMELIMIT $opr -a $force $odb $dbuser $osuser >>$tmpfile 2>&1
+        if ! grep -s -q 'entry (.*) added.' $tmpfile ; then
+            orabase_error "Error while add new entry to OPR: "
+            cat $tmpfile | while read l ; do
+                orabase_error "  $l"
+            done
+            rm -f $tmpfile
+            return 1
+        fi
+    fi
+
+    rm -f $tmpfile
+    return 0
+}
+
+# Execute given SQL-query or SQL-script
+#
+# Usage:
+#       orasql_simplequery database username query arguments
+#
+# Parameters:
+#       query - SQL-query or SQL-script file
+#
+orasql_simplequery() {
+    local odb=${1:-$DB}
+    local dbuser=${2:-$DB_USER}
+    local query=$3
+    shift 3
+    local args="$@"
+
+    local sqlplus=$ORACLE_HOME/bin/sqlplus
+    local db=""
+    local pwd="$DB_PWD"
+    local sysdba=""
+    local spoolfile sqlerrlog
+    local deffile="@confdir@/sql-functions.def"
+    local userdeffile="$SQLPLUS_FORMAT"
+
+    local TIMELIMIT=
+
+    if [ ! -x $sqlplus ] ; then
+        echo
+        orabase_error "Can't find SQLPlus executable: $sqlplus"
+        return 2
+    fi
+
+    [ -z "$pwd" ] && pwd=`orasql_password_get $odb $dbuser`
+
+    case "$dbuser" in
+        sys | SYS ) sysdba=" as sysdba" ;;
+        system | SYSTEM ) sysdba=" as sysoper" ;;
+    esac 
+ 
+    if [ -n "$pwd" ] ; then
+        pwd="/$pwd"
+        db="@$odb"
+    else
+        # If password is not defined, then for TNSAlias 'loacal' used sysdba login without password
+        pwd="/"
+        if [ "$odb" != "local" ] ; then
+            db="@$odb"
+            orabase_warn "Can't find password for $dbuser@$odb"
+        else
+            dbuser=
+            db=
+        fi
+    fi
+
+    if [ ! -f "$query" ] ; then
+       echo "$query" | grep -q -s '.*;$' || query="${query};"
+    fi
+
+    spoolfile=`orasql_mktemp orasql_simplequery.spool`
+    sqlerrlog=`orasql_mktemp orasql_sqlplus.error.log`
+
+    # Set up timelimit environment
+    [ -n "$WARNTIME" ] && TIMELIMIT="$TIMELIMIT -t$WARNTIME"
+    [ -n "$KILLTIME" ] && TIMELIMIT="$TIMELIMIT -T$KILLTIME"
+    [ -n "$WARNSIG" ] && TIMELIMIT="$TIMELIMIT -s$WARNSIG"
+    [ -n "$KILLSIG" ] && TIMELIMIT="$TIMELIMIT -S$KILLSIG"
+    [ -n "$TIMELIMIT" ] && TIMELIMIT="/usr/bin/timelimit -q $TIMELIMIT --"
+
+    $TIMELIMIT $sqlplus -s /NOLOG << __EOFF__ 2>&1 > $sqlerrlog
+connect ${dbuser}${pwd}${db}${sysdba}
+set head off
+set echo off
+set appinfo "${DB_APPINFO:-'SQL-FUNCTIONS @PACKAGE_VERSION@'}"
+set serveroutput on
+`[ -r "$deffile" ] && grep -i '^\(set \|col\|def\|undef\|bre\)' $deffile`
+`[ -r "$userdeffile" ] && \
+grep -i '^\(set \|col\|def\|undef\|bre\|comp\|cl\|attribute\|pri\|tti\|sho\|sta\)' $userdeffile`
+`i=1; for j in $args ; do echo define $i = "$j" ; i=$((i+1)) ; done`
+spool $spoolfile
+`[ -f "$query" ] && cat $query || echo "$query"`
+spool off
+exit;
+__EOFF__
+
+    if grep -q -s '^SP' $sqlerrlog ; then
+        echo "=== Command has been executed" >> $sqlerrlog
+        if [ -f "$query" ]; then
+           cat $query >> $sqlerrlog
+        else
+           echo "$query" >> $sqlerrlog
+        fi
+        echo "===" >> $sqlerrlog
+        orabase_error "Error while execute SQLPlus command"
+        [ -n "$LOG_FILE" ] && cat $sqlerrlog >> $LOG_FILE
+        rm -f $sqlerrlog 2>/dev/null
+        rm -f $spoolfile 2>/dev/null
+        return 1
+    fi
+
+    [ -f $spoolfile ] && cat $spoolfile
+
+    rm -f $sqlerrlog 2>/dev/null
+    rm -f $spoolfile 2>/dev/null
+
+    return 0
+}
+
+# Execute one simple query
+#
+# Usage:
+#       orasql_selectfromdual database username
+#
+orasql_selectfromdual() {
+    orasql_simplequery "$1" "$2" "select 1 from dual;"
+}
+
+# Check database
+#
+# Usage:
+#       orasql_chk_dbaccess database username
+#
+orasql_chk_dbaccess() {
+    local rc=1
+    local WTIME=${WARNTIME:-15}
+    local WSIG=${WARNSIG:-1}
+    local KTIME=${KILLTIME:-10}
+    local KSIG=${KILLSIG:-9}
+
+    WARNTIME=$WTIME WARNSIG=$WSIG KILLTIME=$KTIME KILLSIG=$KSIG orasql_selectfromdual "$1" "$2" | sed -ne '/^\s*1\s*$/p' | tr -d '[:space:]' | grep -q -s '^1$' &
+
+    wait $!
+    rc=$?
+
+    return $rc
+}
+

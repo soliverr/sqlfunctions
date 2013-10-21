@@ -1,0 +1,232 @@
+#! /bin/bash
+#
+# Execute given sql or sql-script
+#
+
+# Base directories ---------------------------------------------------------------------
+PACKAGE_NAME="@PACKAGE_NAME@"
+PACKAGE_VERSION="@PACKAGE_VERSION@"
+PACKAGE_STRING="@PACKAGE_STRING@"
+
+# Base directories ---------------------------------------------------------------------
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+liblsb=@liblsb@
+libdir=@libdir@
+libexecdir=@libexecdir@
+sysconfdir=@sysconfdir@
+confdir=@confdir@
+localstatedir=@localstatedir@
+datarootdir=@datarootdir@
+datadir=@datadir@
+logdir=@logdir@
+spooldir=@spooldir@
+config=$confdir/oradba-exec-sql.conf
+
+# Operational variables ----------------------------------------------------------------
+exe_name=$0
+BASE_DIR=`dirname $exe_name`
+# Log file
+LOG_FILE=
+# Enable debug
+DEBUG=
+
+# Set log directory from environment
+[ -n "$LOG_DIR" ] && logdir="$LOG_DIR"
+
+# Default values -----------------------------------------------------------------------
+DEFAULT_LOG_FILE=$logdir/oracledba-exec-sql.log
+DEFAULT_DB="local"
+
+# Global variables ---------------------------------------------------------------------
+#
+export LOG_FILE DB DB_USER DB_PWD DB_APPINFO logdir spooldir
+
+# Procedures and functions -------------------------------------------------------------
+usage() {
+  cat << __EOFF__
+
+Usage: $0 [--user DB_USER] [--password PWD] [--database DB]
+          [--log-name LOGNAME] [--log-mode LOGMODE] [--log-dir LOGDIR]
+          "SQL-query|SQL-script" [parameter1 ...]
+
+Execute SQL-query or SQL-script in Oracle RDBMS.
+
+Optional arguments:
+    -u, --user DB_USER      -- User name to connect to database
+    -p, --password PWD      -- User password to connect to database
+                               (default is to try get password from OPR)
+    -b, --database DB       -- Oracle database name ($DEFAULT_DB)
+    -l, --log-name LOGNAME  -- Log-file name
+    -r, --log-dir LOGDIR    -- Log directory ($logdir)
+    -o, --log-mode LOGMODE  -- Write mode to logfile (auto):
+                                 runit  - use log service of RunIt
+                                 dtools - use log service of DaemonTools
+                                 syslog - use system SysLog service
+                                 file   - write to plain log-file
+                               Default mode is 'auto' - try to guess apropriate mode
+    --debug                 -- Enable debug output
+    -v, --version           -- Show version information and exit
+    -h, --help              -- Display this help and exit
+
+ SQL-query  - SQL-query text to execute in given database
+ SQL-script - SQL-script file to execute in given database
+
+ [parameter1 parameter2 ...] - optional parameters for SQL-script
+
+__EOFF__
+}
+
+show_version() {
+  cat << __EOFF__
+$PACKAGE_STRING
+
+__EOFF__
+}
+
+# Set logfile name if not defined
+_set_logname() {
+
+  if [ -n "$1" ] ; then
+    echo $1
+  else
+    echo $DB_SQL | tr ' ;' '_'
+  fi
+
+}
+
+# Check and set logfile write mode
+_set_logmode() {
+
+  local lm=`echo $1 | tr [:upper:] [:lower:]`
+
+  case "$lm" in
+    runit|dtools|syslog|file)
+    ;;
+    *) lm=auto
+    ;;
+  esac
+
+  if [ "$lm" = "auto" ] ; then
+     [ "$lm" = "auto" ] && which svlogd > /dev/null 2>&1 && lm=runit
+     [ "$lm" = "auto" ] && which multilog > /dev/null 2>&1 && lm=dtools
+     [ "$lm" = "auto" ] && which logger > /dev/null 2>&1 && lm=syslog
+     [ "$lm" = "auto" ] && lm=file
+  fi
+
+  echo $lm
+}
+
+# Main program =========================================================================
+#
+# Set logfile
+LOG_FILE=${LOG_FILE:-$DEFAULT_LOG_FILE}
+
+source $liblsb/orabase-functions 2>&- || { echo "File $liblsb/orabase-functions is not exists" >&2 | tee -a $LOG_FILE; exit 1; }
+source $liblsb/oradba-sqlfunctions 2>&- || orabase_error_exit "File $liblsb/oradba-sqlfunctions is not exists"
+
+# Set Oracle environments
+oracle_env
+
+# Read variables from configuration file -----------------------------------------------
+[ -r $config ] && source $config
+
+# Set log output mode
+if [ -z "$TERM" -o "$TERM" = "dumb" ]; then
+   # Silence mode. Write to logfile only
+   export ORABASE_QUIET="TRUE"
+fi
+
+orabase_info "Started as как $0 $*"
+
+# Process command line arguments
+TEMP=`getopt -o h,v,p:,u:,b:,l:,o:,r:,d: \
+--long help,version,debug,user:,database:,password:,log-name:,log-mode:,log-dir:,\
+dir:,basedir:,output:,logname:,dbuser:,dbname: \
+-n "$exe_name" -- "$@"` 2>> $LOG_FILE
+
+if [ $? != 0 ] ; then
+    [ -z "$ORABASE_QUIET" ] && usage
+    orabase_error_exit "Please, set working parameters"
+fi
+
+eval set -- "$TEMP"
+
+while true ; do
+    case "$1" in
+        -u|--user|--dbuser) DB_USER="$2" ; shift 2 ;;
+        -p|--password) DB_PWD="$2" ; shift 2 ;;
+        -b|--database|--dbname) DB="$2" ; shift 2 ;;
+        -l|--log-name|--logname) SQL_LOGNAME="$2" ; shift 2 ;;
+        -o|--log-mode) SQL_LOGMODE="$2" ; shift 2 ;;
+        -r|--log-dir|--basedir) logdir="$2"; shift 2 ;;
+        -d|--dir|--output) shift 2 ;;
+        --debug) shift; DEBUG=1; set -x ;;
+        -h|--help) usage; exit 0 ;;
+        -v|--version) show_version; exit 0 ;;
+        --) shift ; break ;;
+        *) orabase_error_exit "Command line parsing error"
+    esac
+done
+
+# SQL-query/SQL-script
+DB_SQL="$1"
+shift
+# Parameters for query/script
+DB_SQL_ARGS="$@"
+
+# Set default values
+DB=${DB:-$DEFAULT_DB}
+SQL_LOGMODE=${SQL_LOGMODE:-$LOG_MODE}
+
+[ -z "$DB_USER" ] && orabase_error_exit "Database user name is not supplied"
+[ -z "$DB_SQL" ] && orabase_error_exit "SQL-query or SQL-script is not defined"
+
+# Set name of logfile
+SQL_LOGNAME=`_set_logname "$SQL_LOGNAME"`
+
+# Set output mode
+SQL_LOGMODE=`_set_logmode "$SQL_LOGMODE"`
+
+# Set name for temporary logfile
+main_log_file=$LOG_FILE
+LOG_FILE="$logdir/$SQL_LOGNAME.log.$$"
+
+DB_APPINFO="$SQL_LOGMODE:$SQL_LOGNAME"
+
+# Execute SQL
+orasql_chk_dbaccess "$DB" "$DB_USER" 2>>$LOG_FILE 1>/dev/null \
+ && orasql_simplequery "$DB" "$DB_USER" "$DB_SQL" "$DB_SQL_ARGS" >> $LOG_FILE 2>&1 \
+ || echo "Database $DB is not available for user $DB_USER" >> $LOG_FILE
+
+case "$SQL_LOGMODE" in
+  runit)
+     bdir="$logdir/$SQL_LOGNAME"
+     [ ! -d $bdir ] && mkdir -p $bdir 2>> $main_log_file
+     [ ! -r $bdir/current ] && touch $bdir/current 2>> $main_log_file
+     cat $LOG_FILE | svlogd -tt $bdir 2>> $main_log_file
+     rm -f $LOG_FILE 2>> $main_log_file
+  ;;
+  dtools)
+     bdir="$logdir/$SQL_LOGNAME"
+     [ ! -d $bdir ] && mkdir -p $bdir 2>> $main_log_file
+     cat $LOG_FILE | multilog t $bdir 2>> $main_log_file
+     rm -f $LOG_FILE 2>> $main_log_file
+  ;;
+  syslog)
+     logger -f $LOG_FILE 2>> $main_log_file
+     rm -f $LOG_FILE 2>> $main_log_file
+  ;;
+  file)
+     bdir="$logdir"
+     [ ! -d $bdir ] && mkdir -p $bdir 2>> $main_log_file
+     dat=`date`
+     sed -e "s/\(.*\)/$dat \1/g" $LOG_FILE >> $logdir/$SQL_LOGNAME.log 2>> $main_log_file
+     rm -f $LOG_FILE 2>> $main_log_file
+  ;;
+esac
+
+[ -f $LOG_FILE ] && rm -f $LOG_FILE 2>> $main_log_file
+
+exit 0
+

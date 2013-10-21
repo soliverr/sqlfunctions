@@ -1,0 +1,27 @@
+# Rotate logfile
+@logdir@/*.log {
+    compress
+    weekly
+    rotate 4
+    size 32M
+    minsize 4M
+    maxage 65
+    missingok
+    nocreate
+    dateext
+    olddir /var/log/oracle/archive/oradba-exec-sql
+}
+
+# Rotate files in spool
+@spooldir@/* {
+    compress
+    weekly
+    rotate 4
+    size 32M
+    minsize 4M
+    maxage 65
+    missingok
+    nocreate
+    dateext
+    olddir /var/log/oracle/archive/oradba-exec-sql
+}
