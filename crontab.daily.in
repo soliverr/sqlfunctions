@@ -4,6 +4,7 @@
 #
 
 # Package identification ---------------------------------------------------------------
+SECTION="@SECTION@"
 PACKAGE_NAME="@PACKAGE_NAME@"
 PACKAGE_VERSION="@PACKAGE_VERSION@"
 PACKAGE_STRING="@PACKAGE_STRING@"
@@ -20,12 +21,24 @@ datarootdir=@datarootdir@
 datadir=@datadir@
 logdir=@logdir@
 spooldir=@spooldir@
-config=$confdir/oradba-exec-sql.conf
+config=$confdir/$SECTION-exec-sql.conf
+
+# Owner for clean tasks
+ORA_OWNER=oracle
+
+# Comment this line to enable real cleaning
+exit 0
+
 
 [ -r $config ] && . $config || exit 1
 
 test -z "$OLD_LOG_KEEP_DAYS" -o "$OLD_LOG_KEEP_DAYS" -gt 0 2>/dev/null || OLD_LOG_KEEP_DAYS=30
 
-find $logdir -type f -mtime +$OLD_LOG_KEEP_DAYS -exec rm -f {} \;
-find $spooldir -type f -mtime +$OLD_LOG_KEEP_DAYS -exec rm -f {} \;
-find $LOG_DIR -type f -mtime +$OLD_LOG_KEEP_DAYS -exec rm -f {} \;
+[ -z "$LOG_DIR" ] && LOG_DIR="$logdir"
+[ -z "$SPOOL_DIR" ] && SPOOL_DIR="$spooldir"
+
+[ -d "$LOG_DIR" ] && su $ORA_OWNER --preserve-environment --command find "$LOG_DIR" -type f -mtime +$OLD_LOG_KEEP_DAYS -exec rm -f {} '\'
+
+[ -d "$SPOOL_DIR" ] && su $ORA_OWNER --preserve-environment --command find "$SPOOL_DIR" -type f -mtime +$OLD_LOG_KEEP_DAYS -exec rm -f {} '\'
+
+# End-of-file

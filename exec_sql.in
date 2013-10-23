@@ -3,7 +3,8 @@
 # Execute given sql or sql-script
 #
 
-# Base directories ---------------------------------------------------------------------
+# Package identification ---------------------------------------------------------------
+SECTION="@SECTION@"
 PACKAGE_NAME="@PACKAGE_NAME@"
 PACKAGE_VERSION="@PACKAGE_VERSION@"
 PACKAGE_STRING="@PACKAGE_STRING@"
@@ -21,13 +22,13 @@ datarootdir=@datarootdir@
 datadir=@datadir@
 logdir=@logdir@
 spooldir=@spooldir@
-config=$confdir/oradba-exec-sql.conf
+config=$confdir/$SECTION-exec-sql.conf
 
 # Operational variables ----------------------------------------------------------------
 exe_name=$0
 BASE_DIR=`dirname $exe_name`
 # Log file
-LOG_FILE=
+ORABASE_LOG_FILE=
 # Enable debug
 DEBUG=
 
@@ -35,12 +36,14 @@ DEBUG=
 [ -n "$LOG_DIR" ] && logdir="$LOG_DIR"
 
 # Default values -----------------------------------------------------------------------
-DEFAULT_LOG_FILE=$logdir/oracledba-exec-sql.log
+DEFAULT_LOG_DIR="$logdir"
+DEFAULT_LOG_FILE="$DEFAULT_LOG_DIR/$SECTION-exec-sql.log"
+DEFAULT_SPOOL_DIR="$spooldir"
 DEFAULT_DB="local"
 
 # Global variables ---------------------------------------------------------------------
 #
-export LOG_FILE DB DB_USER DB_PWD DB_APPINFO logdir spooldir
+export ORABASE_LOG_FILE DB DB_USER DB_PWD DB_APPINFO LOG_DIR SPOOL_DIR
 
 # Procedures and functions -------------------------------------------------------------
 usage() {
@@ -119,10 +122,10 @@ _set_logmode() {
 
 # Main program =========================================================================
 #
-# Set logfile
-LOG_FILE=${LOG_FILE:-$DEFAULT_LOG_FILE}
+# Set logfile for initial messages
+ORABASE_LOG_FILE=${ORABASE_LOG_FILE:-$DEFAULT_LOG_FILE}
 
-source $liblsb/orabase-functions 2>&- || { echo "File $liblsb/orabase-functions is not exists" >&2 | tee -a $LOG_FILE; exit 1; }
+source $liblsb/orabase-functions 2>&- || { echo "File $liblsb/orabase-functions is not exists" >&2 | tee -a $ORABASE_LOG_FILE; exit 1; }
 source $liblsb/oradba-sqlfunctions 2>&- || orabase_error_exit "File $liblsb/oradba-sqlfunctions is not exists"
 
 # Set Oracle environments
@@ -137,7 +140,9 @@ if [ -z "$TERM" -o "$TERM" = "dumb" ]; then
    export ORABASE_QUIET="TRUE"
 fi
 
-orabase_info "Started as как $0 $*"
+set 
+
+orabase_info "Started as $0 $*"
 
 # Process command line arguments
 TEMP=`getopt -o h,v,p:,u:,b:,l:,o:,r:,d: \
@@ -188,16 +193,22 @@ SQL_LOGNAME=`_set_logname "$SQL_LOGNAME"`
 # Set output mode
 SQL_LOGMODE=`_set_logmode "$SQL_LOGMODE"`
 
-# Set name for temporary logfile
-main_log_file=$LOG_FILE
-LOG_FILE="$logdir/$SQL_LOGNAME.log.$$"
+# Set log and spool dir
+LOG_DIR=${LOG_DIR:-$DEFAULT_LOG_DIR}
+SPOOL_DIR=${SPOOL_DIR:-$DEFAULT_SPOOL_DIR}
+
+# Set main log file
+main_log_file=${LOG_FILE:-$ORABASE_LOG_FILE}
+
+# Set name for session logfile
+ORABASE_LOG_FILE="$LOG_DIR/$SQL_LOGNAME.log.$$"
 
 DB_APPINFO="$SQL_LOGMODE:$SQL_LOGNAME"
 
 # Execute SQL
-orasql_chk_dbaccess "$DB" "$DB_USER" 2>>$LOG_FILE 1>/dev/null \
- && orasql_simplequery "$DB" "$DB_USER" "$DB_SQL" "$DB_SQL_ARGS" >> $LOG_FILE 2>&1 \
- || echo "Database $DB is not available for user $DB_USER" >> $LOG_FILE
+orasql_chk_dbaccess "$DB" "$DB_USER" 2>>$ORABASE_LOG_FILE 1>/dev/null \
+ && orasql_simplequery "$DB" "$DB_USER" "$DB_SQL" "$DB_SQL_ARGS" >> $ORABASE_LOG_FILE 2>&1 \
+ || echo "Database $DB is not available for user $DB_USER" >> $ORABASE_LOG_FILE
 
 case "$SQL_LOGMODE" in
   runit)
@@ -221,12 +232,13 @@ case "$SQL_LOGMODE" in
      bdir="$logdir"
      [ ! -d $bdir ] && mkdir -p $bdir 2>> $main_log_file
      dat=`date`
-     sed -e "s/\(.*\)/$dat \1/g" $LOG_FILE >> $logdir/$SQL_LOGNAME.log 2>> $main_log_file
-     rm -f $LOG_FILE 2>> $main_log_file
+     sed -e "s/\(.*\)/$dat \1/g" $ORABASE_LOG_FILE >> $LOG_DIR/$SQL_LOGNAME.log 2>> $main_log_file
+     rm -f $ORABASE_LOG_FILE 2>> $main_log_file
   ;;
 esac
 
-[ -f $LOG_FILE ] && rm -f $LOG_FILE 2>> $main_log_file
+# Remove session log file
+[ -f $ORABASE_LOG_FILE ] && rm -f $ORABASE_LOG_FILE 2>> $main_log_file
 
 exit 0
 

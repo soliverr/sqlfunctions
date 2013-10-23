@@ -1,8 +1,18 @@
 AC_PREREQ(2.61)
-AC_INIT(oradba-sqlfunctions, 2.1, soliverr@gmail.com)
+AC_INIT(sqlfunctions, 2.1, soliverr@gmail.com)
 
-AC_MSG_CHECKING(PACKAGE_NAME)
-AC_MSG_RESULT($PACKAGE_NAME)
+dnl
+dnl Section: subdirectory in base layouts and NAME PREFIX for all packages
+dnl
+AC_SUBST(SECTION, 'oradba')
+AC_MSG_CHECKING(SECTION)
+AC_MSG_RESULT($SECTION)
+
+dnl
+dnl Show package identification
+dnl
+AC_MSG_CHECKING(PACKAGE_STRING)
+AC_MSG_RESULT($PACKAGE_STRING)
 
 dnl
 dnl Common path  for all oradba packages
@@ -23,13 +33,13 @@ AC_MSG_CHECKING(localstatedir)
 AC_MSG_RESULT($localstatedir)
 
 if test "x$libexecdir" = 'x${exec_prefix}/libexec' ; then
-    AC_SUBST(libexecdir, '${exec_prefix}/libexec/${PACKAGE_NAME}')
+    AC_SUBST(libexecdir, '${exec_prefix}/libexec/${SECTION}/${PACKAGE_NAME}')
 fi
 AC_MSG_CHECKING(libexecdir)
 AC_MSG_RESULT($libexecdir)
 
 if test "x$datadir" = 'x${datarootdir}' ; then
-    AC_SUBST(datadir, '${datarootdir}/${PACKAGE_NAME}')
+    AC_SUBST(datadir, '${datarootdir}/${SECTION}/${PACKAGE_NAME}')
 fi
 AC_MSG_CHECKING(datadir)
 AC_MSG_RESULT($datadir)
@@ -39,6 +49,12 @@ if test "x$sysconfdir" = 'x${prefix}/etc' ; then
 fi
 AC_MSG_CHECKING(sysconfdir)
 AC_MSG_RESULT($sysconfdir)
+
+if test "x$docdir" = 'x${datarootdir}/doc/${PACKAGE_TARNAME}' ; then
+    AC_SUBST(docdir, '${datarootdir}/doc/${SECTION}/${PACKAGE_TARNAME}-${PACKAGE_VERSION}')
+fi
+AC_MSG_CHECKING(docdir)
+AC_MSG_RESULT($docdir)
 
 
 dnl
@@ -66,10 +82,10 @@ AC_SUBST(liblsb)
 AC_MSG_RESULT($liblsb)
 
 dnl --with-logdir
-logdir='${localstatedir}/log/oracle/${PACKAGE_NAME}'
+logdir='${localstatedir}/log/oracle/${SECTION}/${PACKAGE_NAME}'
 AC_MSG_CHECKING(logdir)
 AC_ARG_WITH(logdir,
-[  --with-logdir=DIR       Directory for logfiles [LOCALSTATEDIR/log/oracle/PACKAGE_NAME] ],
+[  --with-logdir=DIR       Directory for logfiles [LOCALSTATEDIR/log/oracle/SECTION/PACKAGE_NAME] ],
 [ case "$withval" in
     no)
         AC_MSG_ERROR(Need logdir)
@@ -85,11 +101,31 @@ AC_ARG_WITH(logdir,
 AC_SUBST(logdir)
 AC_MSG_RESULT($logdir)
 
+dnl --with-archivelogdir
+archivelogdir='${localstatedir}/log/oracle/archive/${SECTION}/${PACKAGE_NAME}'
+AC_MSG_CHECKING(archivelogdir)
+AC_ARG_WITH(archivelogdir,
+[  --with-archivelogdir=DIR       Directory to keep rotated logfiles [LOCALSTATEDIR/log/oracle/archive/SECTION/PACKAGE_NAME] ],
+[ case "$withval" in
+    no)
+        AC_MSG_ERROR(Need archivelogdir)
+        ;;
+    [[\\/$]]* | ?:[[\\/]]* )
+        archivelogdir="$withval"
+        ;;
+    yes | *)
+        AC_MSG_ERROR([expected an absolute directory name for --with-archivelogdir: $withval])
+        ;;
+  esac ]
+)
+AC_SUBST(archivelogdir)
+AC_MSG_RESULT($archivelogdir)
+
 dnl --with-confdir
-confdir='${sysconfdir}/oracle'
+confdir='${sysconfdir}/oracle/${SECTION}'
 AC_MSG_CHECKING(confdir)
 AC_ARG_WITH(confdir,
-[  --with-confdir=DIR      Directory for config files [SYSCONFDIR/oracle] ],
+[  --with-confdir=DIR      Directory for config files [SYSCONFDIR/oracle/SECTION] ],
 [ case "$withval" in
     no)
         AC_MSG_ERROR(Need confdir)
@@ -106,10 +142,10 @@ AC_SUBST(confdir)
 AC_MSG_RESULT($confdir)
 
 dnl --with-spooldir
-spooldir='${localstatedir}/spool/oracle/${PACKAGE_NAME}'
+spooldir='${localstatedir}/spool/oracle/${SECTION}/${PACKAGE_NAME}'
 AC_MSG_CHECKING(spooldir)
 AC_ARG_WITH(spooldir,
-[  --with-spooldir=DIR     Directory for spool files [LOCALSTATEDIR/spool/oracle/PACKAGE_NAME] ],
+[  --with-spooldir=DIR     Directory for spool files [LOCALSTATEDIR/spool/oracle/SECTION/PACKAGE_NAME] ],
 [ case "$withval" in
     no)
         AC_MSG_ERROR(Need confdir)

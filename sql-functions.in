@@ -11,12 +11,10 @@ orasql_mktemp() {
     local fname=${1:-orasql_mktemp}
     local sdir tmpfile
 
-    if [ -n "$pkgspooldir" -a -w "$pkgspooldir" ] ; then
-       sdir="$pkgspooldir"
-    elif [ -n "$spooldir" -a -w "$spooldir" ] ; then
-       sdir="$spooldir"
-    elif [ -n "$logdir" -a -w "$logdir" ] ; then
-       sdir="$logdir"
+    if [ -n "$SPOOL_DIR" -a -w "$SPOOL_DIR" ] ; then
+       sdir="$SPOOL_DIR"
+    elif [ -n "$LOG_DIR" -a -w "$LOG_DIR" ] ; then
+       sdir="$LOG_DIR"
     else
        sdir="/tmp"
     fi

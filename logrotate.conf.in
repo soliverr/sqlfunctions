@@ -9,7 +9,7 @@
     missingok
     nocreate
     dateext
-    olddir /var/log/oracle/archive/oradba-exec-sql
+    olddir @archivelogdir@
 }
 
 # Rotate files in spool
@@ -23,5 +23,5 @@
     missingok
     nocreate
     dateext
-    olddir /var/log/oracle/archive/oradba-exec-sql
+    olddir @archivelogdir@
 }
