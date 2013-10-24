@@ -1874,7 +1874,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $spooldir" >&5
 $as_echo "$spooldir" >&6; }
 
-ac_config_files="$ac_config_files Makefile logrotate.conf crontab.daily"
+ac_config_files="$ac_config_files Makefile logrotate.conf crontab crontab.daily"
 
 ac_config_files="$ac_config_files build_expand.sh exec_sql oradba-crontab sql-functions"
 
@@ -2585,6 +2585,7 @@ do
   case $ac_config_target in
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "logrotate.conf") CONFIG_FILES="$CONFIG_FILES logrotate.conf" ;;
+    "crontab") CONFIG_FILES="$CONFIG_FILES crontab" ;;
     "crontab.daily") CONFIG_FILES="$CONFIG_FILES crontab.daily" ;;
     "build_expand.sh") CONFIG_FILES="$CONFIG_FILES build_expand.sh" ;;
     "exec_sql") CONFIG_FILES="$CONFIG_FILES exec_sql" ;;

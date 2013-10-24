@@ -103,32 +103,33 @@ install-logrotate:
 install-crontabs: install-crontabs-hourly install-crontabs-daily install-crontabs-weekly install-crontabs-monthly
 	# Install cron jobs
 	-if [ -f crontab.d ] ; then \
-	    $(INSTALL) -D --mode 644 crontab.d $(DESTDIR)$(sysconfdir)/cron.d/$(SECTION)-exec-sql ; \
+	    $(INSTALL) -D --mode 644 crontab.d $(DESTDIR)$(confdir)/cron.d/$(SECTION)-exec-sql ; \
 	fi
+	$(INSTALL) -D --mode 644 crontab $(DESTDIR)$(confdir)/cron.d/$(SECTION) ; \
 
 install-crontabs-hourly:
 	-if [ -f crontab.hourly ] ; then \
-	    $(INSTALL) -D --mode 755 crontab.hourly $(DESTDIR)$(sysconfdir)/cron.hourly/$(SECTION)-exec-sql ; \
+	    $(INSTALL) -D --mode 755 crontab.hourly $(DESTDIR)$(confdir)/cron.hourly/$(SECTION)-exec-sql ; \
 	fi
 
 install-crontabs-daily:
 	-if [ -f crontab.daily ] ; then \
-	    $(INSTALL) -D --mode 755 crontab.daily $(DESTDIR)$(sysconfdir)/cron.daily/$(SECTION)-exec-sql ; \
+	    $(INSTALL) -D --mode 755 crontab.daily $(DESTDIR)$(confdir)/cron.daily/$(SECTION)-exec-sql ; \
 	fi
 
 install-crontabs-weekly:
 	-if [ -f crontab.weekly ] ; then \
-	    $(INSTALL) -D --mode 755 crontab.weekly $(DESTDIR)$(sysconfdir)/cron.weekly/$(SECTION)-exec-sql ; \
+	    $(INSTALL) -D --mode 755 crontab.weekly $(DESTDIR)$(confdir)/cron.weekly/$(SECTION)-exec-sql ; \
 	fi
 
 install-crontabs-monthly:
 	-if [ -f crontab.monthly ] ; then \
-	    $(INSTALL) -D --mode 755 crontab.monthly $(DESTDIR)$(sysconfdir)/cron.monthly/$(SECTION)-exec-sql ; \
+	    $(INSTALL) -D --mode 755 crontab.monthly $(DESTDIR)$(confdir)/cron.monthly/$(SECTION)-exec-sql ; \
 	fi
 
 clean:
 	-rm -fv $(SECTION)-exec-sql.1.gz $(SECTION)-exec-sql.ru.1.gz
-	-rm -fv logrotate.conf crontab.daily exec_sql $(SECTION)-crontab sql-functions
+	-rm -fv logrotate.conf crontab crontab.daily exec_sql $(SECTION)-crontab sql-functions
 	-rm -fv Makefile config.h config.status config.cache config.log build_expand.sh
 
 distclean: clean

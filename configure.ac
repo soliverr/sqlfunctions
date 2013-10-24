@@ -161,6 +161,6 @@ AC_ARG_WITH(spooldir,
 AC_SUBST(spooldir)
 AC_MSG_RESULT($spooldir)
 
-AC_CONFIG_FILES([Makefile logrotate.conf crontab.daily])
+AC_CONFIG_FILES([Makefile logrotate.conf crontab crontab.daily])
 AC_OUTPUT([build_expand.sh exec_sql oradba-crontab sql-functions])
 
