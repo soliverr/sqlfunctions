@@ -32,6 +32,7 @@ mandir          = @mandir@
 man1dir         = @mandir@/man1
 man1rudir       = @mandir@/ru/man1
 spooldir        = @spooldir@
+statusdir       = @statusdir@
 
 # Destination dir
 DESTDIR         =
@@ -45,7 +46,7 @@ install: expand install-dirs install-docs install-files
 
 expand:
 	chmod +x $(srcdir)/build_expand.sh
-	$(srcdir)/build_expand.sh logrotate.conf
+	$(srcdir)/build_expand.sh logrotate.conf logrotate_main.conf logrotate crontab
 
 
 install-base-dirs:
@@ -54,6 +55,7 @@ install-base-dirs:
 	$(INSTALL) --directory --mode 755 $(DESTDIR)$(sysconfdir)
 	$(INSTALL) --directory --mode 755 $(DESTDIR)$(confdir)
 	$(INSTALL) --directory --mode 755 $(DESTDIR)$(bindir)
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(statusdir)
 	$(INSTALL) --directory --mode 755 $(DESTDIR)$(spooldir)
 	$(INSTALL) --directory --mode 755 $(DESTDIR)$(logdir)
 
@@ -97,8 +99,9 @@ install-sh:
 install-logrotate:
 	# Install logrotate configuration
 	if [ -f logrotate.conf ] ; then \
-	    $(INSTALL) -D --mode 644 logrotate.conf $(DESTDIR)$(sysconfdir)/logrotate.d/$(SECTION)-exec-sql.conf; \
+	    $(INSTALL) -D --mode 644 logrotate.conf $(DESTDIR)$(confdir)/logrotate.d/$(SECTION)-exec-sql.conf; \
 	fi
+	$(INSTALL) -D --mode 644 logrotate_main.conf $(DESTDIR)$(confdir)/logrotate.conf
 
 install-crontabs: install-crontabs-hourly install-crontabs-daily install-crontabs-weekly install-crontabs-monthly
 	# Install cron jobs
@@ -116,6 +119,7 @@ install-crontabs-daily:
 	-if [ -f crontab.daily ] ; then \
 	    $(INSTALL) -D --mode 755 crontab.daily $(DESTDIR)$(confdir)/cron.daily/$(SECTION)-exec-sql ; \
 	fi
+	$(INSTALL) -D --mode 755 logrotate $(DESTDIR)$(confdir)/cron.daily/$(SECTION)-logrotate
 
 install-crontabs-weekly:
 	-if [ -f crontab.weekly ] ; then \
@@ -129,7 +133,7 @@ install-crontabs-monthly:
 
 clean:
 	-rm -fv $(SECTION)-exec-sql.1.gz $(SECTION)-exec-sql.ru.1.gz
-	-rm -fv logrotate.conf crontab crontab.daily exec_sql $(SECTION)-crontab sql-functions
+	-rm -fv logrotate logrotate_main.conf logrotate.conf crontab crontab.daily exec_sql $(SECTION)-crontab sql-functions
 	-rm -fv Makefile config.h config.status config.cache config.log build_expand.sh
 
 distclean: clean

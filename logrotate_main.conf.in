@@ -1,0 +1,18 @@
+#
+# logrotate.conf for oradba packages
+#
+
+# Default rotation interval
+weekly
+
+# Default rotation count
+rotate 4
+
+# Default is to create rotated files
+create
+
+# Default is to compress rotated files
+compress
+
+# Other configuration files
+include @confdir@/logrotate.d

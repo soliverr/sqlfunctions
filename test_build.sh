@@ -17,10 +17,9 @@ destdir=inst
 
 rm -rf $destdir 2>&-
 
-./configure --with-confdir=/etc/oracle/oradba \
-            --with-logdir=/var/log/oracle/oradba-exec-sql \
-            --with-archivelogdir=/var/log/oracle/archive/oradba-exec-sql \
-            --with-spooldir=/var/spool/oracle/oradba-exec-sql 
+./configure --with-logdir=/var/log/oradba/exec-sql \
+            --with-archivelogdir=/var/log/oradba/archive/exec-sql \
+            --with-spooldir=/var/spool/oradba/exec-sql
 
 make install DESTDIR=$destdir || exit 1
 
@@ -38,10 +37,11 @@ rm -rf $destdir 2>&-
 
 ./configure --prefix=$destdir/usr --localstatedir=$destdir/var \
             --sysconfdir=$destdir/etc --datadir=$destdir/share/$package \
-            --with-liblsb=$destdir/lib/lsb --with-confdir=$destdir/etc/oracle/oradba \
-            --with-logdir=$destdir/var/log/oracle/oradba-exec-sql \
-            --with-archivelogdir=$destdir/var/log/oracle/archive/oradba-exec-sql \
-            --with-spooldir=$destdir/var/spool/oracle/oradba-exec-sql
+            --with-liblsb=$destdir/lib/lsb --with-confdir=$destdir/etc/oradba \
+            --with-logdir=$destdir/var/log/oradba/exec-sql \
+            --with-archivelogdir=$destdir/var/log/oradba/archive/exec-sql \
+            --with-spooldir=$destdir/var/spool/oradba/exec-sql \
+            --with-statusdir=$destdir/var/lib/oradba
 
 make install || exit 1
 

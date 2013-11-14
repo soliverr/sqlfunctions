@@ -11,7 +11,7 @@
 source @liblsb@/orabase-functions 2>&- || { echo "File @liblsb@/orabase-functions is not exists" >&2 ; exit 1; }
 
 # Operational variables ----------------------------------------------------------------
-BASE_DIR=`dirname $exe_name`
+BASE_DIR=`dirname $0`
 EXE_NAME=`basename $0`
 CRON_USER=oracle
 CRON_DIR=@confdir@/cron.d
@@ -25,11 +25,13 @@ usage() {
 
 Add, remove, change, update crontab jobs for user $CRON_USER.
 
-Use:  $0 --add|--del|--upd script_name [sript_name ...]
+Use:  $0 [--user USER] --add|--del|--upd script_name [sript_name ...]
    --add                -- Add content of script_name file into users' crontab
    --del | --delete     -- Remove content of script_name file from users' crontab
    --upd | --update     -- Update content of script_name file from users' crontab
    --chk | --check      -- Check existence of content of script_name file into users' crontab
+
+   --user USER          -- Crontab user name (default $CRON_USER) 
 
    sript_name           -- cron.d formatted file
 
@@ -41,7 +43,7 @@ add_func() {
     local tmpfile=/tmp/crontab$$
     local rc
 
-    crontab -u $CRON_USER -l  > $tmpfile
+    crontab -u $CRON_USER -l 2>&- > $tmpfile
     rc=$?
     if ! grep --silent --no-message "^## -= $file" $tmpfile ; then
         # Add new content
@@ -49,12 +51,12 @@ add_func() {
         echo >> $tmpfile
         echo "## -= $fname : oradba-crontab start =- ##" >> $tmpfile
         cat $CRON_DIR/$fname >> $tmpfile
-        echo "## -= $name : oradba-crontab end =- ##"  >> $tmpfile
+        echo "## -= $fname : oradba-crontab end =- ##"  >> $tmpfile
         echo >> $tmpfile
         echo -n "# End-of-file #" >> $tmpfile
 
         # Install new crontab file
-        crontab -u $CRON_USER $tmpfile
+        crontab -u $CRON_USER $tmpfile 2>&-
         rc=$?
     fi
 
@@ -68,17 +70,19 @@ del_func() {
     local tmpfile=/tmp/crontab$$
     local rc
 
-    crontab -u $CRON_USER -l > $tmpfile
+    crontab -u $CRON_USER -l 2>&- > $tmpfile
     rc=$?
     if grep --silent --no-message "^## -= $file" $tmpfile ; then
         # Delete content
         bs=`grep --line-number "^## -= $fname : oradba-crontab start =- ##" $tmpfile | cut -d ':' -f 1 || echo 0`
         be=`grep --line-number "^## -= $fname : oradba-crontab end =- ##" $tmpfile | cut -d ':' -f 1 || echo 0`
+        [ -z "$bs" ] && bs=0
+        [ -z "$be" ] && be=0
         if [ -n "$bs" -a -n "$be" -a $bs -gt 0 -a $be -gt $bs ] ; then
             sed --in-place "$bs,$be d" $tmpfile
 
             # Install new crontab file
-            crontab -u $CRON_USER $tmpfile
+            crontab -u $CRON_USER $tmpfile 2>&-
             rc=$?
         else
             rc=0
@@ -94,7 +98,7 @@ chk_func() {
     local fname="$1"
     local rc
 
-    crontab -u $CRON_USER -l | grep --silent --no-message "^## -= $fname" >/dev/null
+    crontab -u $CRON_USER -l 2>&- | grep --silent --no-message "^## -= $fname" >/dev/null
     #FIXME: check content with diff
     rc=$?
 
@@ -109,7 +113,12 @@ if [ -z "$TERM" -o "$TERM" = "dumb" ]; then
    export ORABASE_QUIET="TRUE"
 fi
 
-TEMP=`getopt -o h --long help,add,del,delete,upd,update,chk,check \
+if [ $# -eq 0 ] ; then
+   usage
+   exit 0
+fi
+
+TEMP=`getopt -o h --long help,add,del,delete,upd,update,chk,check,user: \
              -n "$EXE_NAME" -- "$@"`
 
 [ $? != 0 ] && orabase_error_exit "Terminating..."
@@ -122,6 +131,7 @@ while true ; do
         --del|--delete) mode=del ; shift ;;
         --upd|--update) mode=upd ; shift ;;
         --chk|--check)  mode=chk ; shift ;;
+        --user) CRON_USER="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         --) shift ; break ;;
         *) orabase_error_exit "Internal error!" ;;

@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT(sqlfunctions, 2.1, soliverr@gmail.com)
+AC_INIT(sqlfunctions, 2.2, soliverr@gmail.com)
 
 dnl
 dnl Section: subdirectory in base layouts and NAME PREFIX for all packages
@@ -82,10 +82,10 @@ AC_SUBST(liblsb)
 AC_MSG_RESULT($liblsb)
 
 dnl --with-logdir
-logdir='${localstatedir}/log/oracle/${SECTION}/${PACKAGE_NAME}'
+logdir='${localstatedir}/log/${SECTION}/${PACKAGE_NAME}'
 AC_MSG_CHECKING(logdir)
 AC_ARG_WITH(logdir,
-[  --with-logdir=DIR       Directory for logfiles [LOCALSTATEDIR/log/oracle/SECTION/PACKAGE_NAME] ],
+[  --with-logdir=DIR       Directory for logfiles [LOCALSTATEDIR/log/SECTION/PACKAGE_NAME] ],
 [ case "$withval" in
     no)
         AC_MSG_ERROR(Need logdir)
@@ -102,10 +102,10 @@ AC_SUBST(logdir)
 AC_MSG_RESULT($logdir)
 
 dnl --with-archivelogdir
-archivelogdir='${localstatedir}/log/oracle/archive/${SECTION}/${PACKAGE_NAME}'
+archivelogdir='${localstatedir}/log/${SECTION}/archive/${PACKAGE_NAME}'
 AC_MSG_CHECKING(archivelogdir)
 AC_ARG_WITH(archivelogdir,
-[  --with-archivelogdir=DIR       Directory to keep rotated logfiles [LOCALSTATEDIR/log/oracle/archive/SECTION/PACKAGE_NAME] ],
+[  --with-archivelogdir=DIR       Directory to keep rotated logfiles [LOCALSTATEDIR/log/SECTION/archive/PACKAGE_NAME] ],
 [ case "$withval" in
     no)
         AC_MSG_ERROR(Need archivelogdir)
@@ -122,10 +122,10 @@ AC_SUBST(archivelogdir)
 AC_MSG_RESULT($archivelogdir)
 
 dnl --with-confdir
-confdir='${sysconfdir}/oracle/${SECTION}'
+confdir='${sysconfdir}/${SECTION}'
 AC_MSG_CHECKING(confdir)
 AC_ARG_WITH(confdir,
-[  --with-confdir=DIR      Directory for config files [SYSCONFDIR/oracle/SECTION] ],
+[  --with-confdir=DIR      Directory for config files [SYSCONFDIR/SECTION] ],
 [ case "$withval" in
     no)
         AC_MSG_ERROR(Need confdir)
@@ -142,10 +142,10 @@ AC_SUBST(confdir)
 AC_MSG_RESULT($confdir)
 
 dnl --with-spooldir
-spooldir='${localstatedir}/spool/oracle/${SECTION}/${PACKAGE_NAME}'
+spooldir='${localstatedir}/spool/${SECTION}/${PACKAGE_NAME}'
 AC_MSG_CHECKING(spooldir)
 AC_ARG_WITH(spooldir,
-[  --with-spooldir=DIR     Directory for spool files [LOCALSTATEDIR/spool/oracle/SECTION/PACKAGE_NAME] ],
+[  --with-spooldir=DIR     Directory for spool files [LOCALSTATEDIR/spool/SECTION/PACKAGE_NAME] ],
 [ case "$withval" in
     no)
         AC_MSG_ERROR(Need confdir)
@@ -161,6 +161,26 @@ AC_ARG_WITH(spooldir,
 AC_SUBST(spooldir)
 AC_MSG_RESULT($spooldir)
 
-AC_CONFIG_FILES([Makefile logrotate.conf crontab crontab.daily])
+dnl --with-statusdir
+statusdir='${localstatedir}/lib/${SECTION}'
+AC_MSG_CHECKING(statusdir)
+AC_ARG_WITH(statusdir,
+[  --with-statusdir=DIR    Directory to store logrotate state files [LOCALSTATEDIR/lib/SECTION] ],
+[ case "$withval" in
+    no)
+        AC_MSG_ERROR(Need statusdir)
+        ;;
+    [[\\/$]]* | ?:[[\\/]]* )
+        statusdir="$withval"
+        ;;
+    yes | *)
+        AC_MSG_ERROR([expected an absolute directory name for --with-statusdir: $withval])
+        ;;
+  esac ]
+)
+AC_SUBST(statusdir)
+AC_MSG_RESULT($statusdir)
+
+AC_CONFIG_FILES([Makefile logrotate logrotate.conf logrotate_main.conf crontab crontab.daily])
 AC_OUTPUT([build_expand.sh exec_sql oradba-crontab sql-functions])
 

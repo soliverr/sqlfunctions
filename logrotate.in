@@ -1,0 +1,34 @@
+#! /bin/sh
+#
+
+status_dir="@statusdir@"
+conf_dir="@confdir@"
+
+if ! test -x /usr/sbin/logrotate ; then
+  /usr/bin/logger -p cron.alert -t logrotate "ERROR /usr/sbin/logrotate not found"
+  exit 0
+fi
+
+# Clean non existent log file entries from status file
+cd $status_dir
+test -e status || touch status
+head -1 status > status.clean
+sed 's/"//g' status | while read logfile date
+do
+    [ -e "$logfile" ] && echo "\"$logfile\" $date"
+done >> status.clean
+mv status.clean status
+
+
+if [ -r $conf_dir ] ; then
+    /usr/sbin/logrotate --state $status_dir/status $conf_dir/logrotate.conf
+    EXITVALUE=$?
+else
+    EXITVALUE=0
+fi
+
+if [ $EXITVALUE != 0 ]; then
+    /usr/bin/logger -p cron.error -t logrotate "ALERT exited abnormally with [$EXITVALUE]"
+fi
+
+exit $EXITVALUE

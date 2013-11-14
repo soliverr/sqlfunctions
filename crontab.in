@@ -8,9 +8,9 @@ PATH=/bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin/:/usr/local/sbin
 #m  h  dom mon dow   command
 
 # run-parts
-01  *  *   *   *     ( cd @confdir@/cron.hourly && run-parts --report @confdir@/cron.hourly )
-02  1  *   *   *     ( cd @confdir@/cron.daily && run-parts --report @confdir@/cron.daily )
-22  1  *   *   0     ( cd @confdir@/cron.weekly && run-parts --report @confdir@/cron.weekly )
-42  1  1   *   *     ( cd @confdir@/cron.monthly && run-parts --report @confdir@/cron.monthly )
+01  *  *   *   *     ( [ -d @confdir@/cron.hourly ] && run-parts --report @confdir@/cron.hourly )
+02  1  *   *   *     ( [ -d @confdir@/cron.daily ] && run-parts --report @confdir@/cron.daily )
+22  1  *   *   0     ( [ -d @confdir@/cron.weekly ] && run-parts --report @confdir@/cron.weekly )
+42  1  1   *   *     ( [ -d @confdir@/cron.monthly ] && run-parts --report @confdir@/cron.monthly )
 
 # End-of-file #
