@@ -1,0 +1,15 @@
+Source: oradba-sqlfunctions
+Section: utils
+Priority: required
+Maintainer: Kryazhevskikh Sergey, <soliverr@gmail.com>
+Build-Depends: debhelper (>= 5)
+
+Package: oradba-sqlfunctions
+Architecture: all
+Depends: logrotate, oracle-base
+Suggests: runit | daemontools, opr, timelimit, oracle-client, oracle-sysvinit
+Description: Functions to maintain Oracle RDBMS.
+ Some usefull functions and scripts for Oracle RDBMS maintenance:
+  oradba-crontab  - maintain crontab jobs
+  oradba-exec-sql - execute SQL-scripts. Usefull to run as cron job
+ .

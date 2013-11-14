@@ -1,0 +1,7 @@
+etc/oradba/cron.d/oradba
+etc/oradba/cron.daily/oradba-exec-sql
+etc/oradba/cron.daily/oradba-logrotate
+etc/oradba/logrotate.d/oradba-exec-sql.conf
+etc/oradba/logrotate.conf
+etc/oradba/oradba-exec-sql.conf
+etc/oradba/sqlfunctions.def

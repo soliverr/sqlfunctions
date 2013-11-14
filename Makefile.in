@@ -134,7 +134,7 @@ install-crontabs-monthly:
 clean:
 	-rm -fv $(SECTION)-exec-sql.1.gz $(SECTION)-exec-sql.ru.1.gz
 	-rm -fv logrotate logrotate_main.conf logrotate.conf crontab crontab.daily exec_sql $(SECTION)-crontab sql-functions
-	-rm -fv Makefile config.h config.status config.cache config.log build_expand.sh
+	-rm -fv Makefile config.h config.status config.cache config.log build_expand.sh _pkg-functions
 
 distclean: clean
 	-rm -rf autom4te.cache

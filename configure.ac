@@ -182,5 +182,5 @@ AC_SUBST(statusdir)
 AC_MSG_RESULT($statusdir)
 
 AC_CONFIG_FILES([Makefile logrotate logrotate.conf logrotate_main.conf crontab crontab.daily])
-AC_OUTPUT([build_expand.sh exec_sql oradba-crontab sql-functions])
+AC_OUTPUT([build_expand.sh _pkg-functions exec_sql oradba-crontab sql-functions])
 

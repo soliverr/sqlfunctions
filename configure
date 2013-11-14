@@ -1903,7 +1903,7 @@ $as_echo "$statusdir" >&6; }
 
 ac_config_files="$ac_config_files Makefile logrotate logrotate.conf logrotate_main.conf crontab crontab.daily"
 
-ac_config_files="$ac_config_files build_expand.sh exec_sql oradba-crontab sql-functions"
+ac_config_files="$ac_config_files build_expand.sh _pkg-functions exec_sql oradba-crontab sql-functions"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -2617,6 +2617,7 @@ do
     "crontab") CONFIG_FILES="$CONFIG_FILES crontab" ;;
     "crontab.daily") CONFIG_FILES="$CONFIG_FILES crontab.daily" ;;
     "build_expand.sh") CONFIG_FILES="$CONFIG_FILES build_expand.sh" ;;
+    "_pkg-functions") CONFIG_FILES="$CONFIG_FILES _pkg-functions" ;;
     "exec_sql") CONFIG_FILES="$CONFIG_FILES exec_sql" ;;
     "oradba-crontab") CONFIG_FILES="$CONFIG_FILES oradba-crontab" ;;
     "sql-functions") CONFIG_FILES="$CONFIG_FILES sql-functions" ;;

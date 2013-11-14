@@ -1,0 +1,42 @@
+#!/bin/bash
+# postinst script for rias-createdb
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+#DEBHELPER#
+
+_attr() {
+  chown "$2" "$3" && chmod "$1" "$3"
+}
+
+postinst "debain" "$@"
+
+# Set filesystems rights
+if [ "$1" = "configure" ] ; then
+  _attr 2770 oracle:oinstall $logdir
+  _attr 2770 oracle:oinstall $archivelogdir
+  _attr 2770 oracle:oinstall $statusdir
+  _attr 2770 oracle:oinstall $spooldir
+
+  dpkg -s oradba-sqlfunctions | grep "etc/" | cut -d ' ' -f 2 | while read f ; do
+    _attr 664 oracle:oinstall $f
+  done
+  _attr 775 oracle:oinstall $confdir/cron.daily/oradba-exec-sql
+  _attr 775 oracle:oinstall $confdir/oradba/cron.daily/oradba-logrotate
+fi
+
+exit 0
