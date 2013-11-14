@@ -67,6 +67,7 @@ install-docs: install-man
 	$(INSTALL) --directory --mode 755 $(DESTDIR)$(docdir)
 	# Install doc files
 	if [ -r README ] ; then $(INSTALL) --mode 0644 README $(DESTDIR)$(docdir) ; fi
+	if [ -r ChangeLog ] ; then $(INSTALL) --mode 0644 ChangeLog $(DESTDIR)$(docdir) ; fi
 
 install-man:
 	# Install man pages
