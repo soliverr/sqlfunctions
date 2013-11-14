@@ -17,7 +17,7 @@ Suggests  : opr, oracle-sysvinit, oracle-client, timelimit
 BuildArch : noarch
 
 Source    : %{name}-%{version}.tar.gz
-BuildRoot : %{_tmppath}/%{name}-%{version}
+BuildRoot : %{_tmppath}/%{pkg_name}-%{version}
 
 %define pkg_build_dir   %_builddir/%name-%version
 %define pkg_functions   %pkg_build_dir/_pkg-functions
