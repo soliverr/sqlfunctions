@@ -182,3 +182,4 @@ for file do
     esac
 done
 
+exit 0
