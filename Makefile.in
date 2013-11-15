@@ -47,7 +47,7 @@ install: expand install-dirs install-docs install-files
 
 expand:
 	chmod +x $(srcdir)/build_expand.sh
-	$(srcdir)/build_expand.sh logrotate.conf logrotate_main.conf logrotate crontab
+	$(srcdir)/build_expand.sh logrotate.conf logrotate_main.conf logrotate crontab oradba-crontab
 
 
 install-base-dirs:
