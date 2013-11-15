@@ -27,6 +27,7 @@ localstatedir   = @localstatedir@
 datarootdir     = @datarootdir@
 datadir         = @datadir@
 logdir          = @logdir@
+archivelogdir   = @archivelogdir@
 docdir          = @docdir@
 mandir          = @mandir@
 man1dir         = @mandir@/man1
