@@ -58,6 +58,7 @@ install-base-dirs:
 	$(INSTALL) --directory --mode 755 $(DESTDIR)$(statusdir)
 	$(INSTALL) --directory --mode 755 $(DESTDIR)$(spooldir)
 	$(INSTALL) --directory --mode 755 $(DESTDIR)$(logdir)
+	$(INSTALL) --directory --mode 755 $(DESTDIR)$(archivelogdir)
 
 install-dirs: install-base-dirs
 	# Create package directories

@@ -9,11 +9,11 @@
 #
 
 # Package identification ---------------------------------------------------------------
-SECTION=@SECTION@
-PACKAGE_NAME=@PACKAGE_NAME@
-PACKAGE_TARNAME=@PACKAGE_TARNAME@
-PACKAGE_VERSION=@PACKAGE_VERSION@
-PACKAGE_STRING=@PACKAGE_STRING@
+SECTION="@SECTION@"
+PACKAGE_NAME="@PACKAGE_NAME@"
+PACKAGE_TARNAME="@PACKAGE_TARNAME@"
+PACKAGE_VERSION="@PACKAGE_VERSION@"
+PACKAGE_STRING="@PACKAGE_STRING@"
 
 # Base directories ---------------------------------------------------------------------
 prefix=@prefix@
@@ -82,10 +82,10 @@ postinst() {
 
     case "$action" in
         configure)
-            $bindir/oradba-crontab --add oratab
+            $bindir/oradba-crontab --add oradba
         ;;
         upgrade)
-            $bindir/oradba-crontab --upd oratab
+            $bindir/oradba-crontab --upd oradba
         ;;
         abort-upgrade|abort-remove|abort-deconfigure)
         ;;
@@ -117,10 +117,8 @@ postrm() {
 
     case "$action" in
         remove)
-            $bindir/oradba-crontab --del oratab
         ;;
         purge)
-            $bindir/oradba-crontab --del oratab
         ;;
         upgrade)
         ;;
@@ -152,6 +150,7 @@ prerm() {
 
     case "$action" in
      remove)
+            $bindir/oradba-crontab --del oradba
      ;;
      upgrade|deconfigure)
      ;;

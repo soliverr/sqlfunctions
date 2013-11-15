@@ -1,8 +1,9 @@
 
-%define pkg_name     sqlfunctions
+# FIXME: get from configure.ac 
+%define pkg_name    sqlfunctions
 
-Summary   : Helper functions for RIAS scripts.
-Summary(ru_RU.UTF-8): Полезные функции для скриптов АСР RIAS.
+Summary   : Functions to maintain Oracle RDBMS.
+Summary(ru_RU.UTF-8): Полезные функции для скриптов обслуживания СУБД Oracle.
 Name      : oradba-%pkg_name
 Version   : 2.2
 Release   : 1
@@ -13,11 +14,11 @@ License   : GPLv2
 URL       : http://sourceforge.net/projects/oracledba
 
 Requires  : logrotate, oracle-base
-Suggests  : opr, oracle-sysvinit, oracle-client, timelimit
+#Suggests  : opr, oracle-sysvinit, oracle-client, timelimit
 BuildArch : noarch
 
-Source    : %{name}-%{version}.tar.gz
-BuildRoot : %{_tmppath}/%{pkg_name}-%{version}
+Source    : %name-%version.tar.gz
+BuildRoot : %_tmppath/%name-%version
 
 %define pkg_build_dir   %_builddir/%name-%version
 %define pkg_functions   %pkg_build_dir/_pkg-functions
@@ -26,37 +27,33 @@ BuildRoot : %{_tmppath}/%{pkg_name}-%{version}
 %define spooldir        /var/spool/oradba/exec-sql
 
 %description
-Helper functions for RIAS scripts.
+Some usefull functions and scripts for Oracle RDBMS maintenance:
+ oradba-crontab  - maintain crontab jobs
+ oradba-exec-sql - execute SQL-scripts. Usefull to run as cron job
 .
 
 %description -l ru_RU.UTF-8
 Данный пакет содержит функции, которые полезно использовать в
-shell-скриптах системы АСР "RIAS", такие как:
- riasql_chk_dbaccess
- riasql_selectfromdual
- riasql_password_get
- riasql_password_set
- .
- А также shell-скрипт для выполнения в базе данных SQL-запросов и 
- SQL-скриптов с параметрами. Для получения паролей доступа в базы данных
- используется репозитарий паролей OPR.
+shell-скриптах поддержки и обслуживания СУБД Oracle:
+ oradba-crontab  - обслуживание пользовательских задач crontab
+ oradba-exec-sql - исполнение SQL, удобно при работе из cron
 .
 
 %prep
 
 %setup
 ./build.sh
-./configure --with-logdir=$(logdir) --with-archivelogdir=$(archivelogdir) --with-spooldir=$(spooldir)
+./configure --with-logdir=%logdir --with-archivelogdir=%archivelogdir --with-spooldir=%spooldir
 
 %build
 
 %install
-[ "%{buildroot}" != "/" ] && rm -rf %{buildroot}
+[ "%buildroot" != "/" ] && rm -rf %buildroot
 
-%{__make} install DESTDIR=$RPM_BUILD_ROOT/
+%__make install DESTDIR=$RPM_BUILD_ROOT/
 
 # Change crontab
-%{__sed} --in-place -e 's/--report //' $RPM_BUILD_ROOT/etc/oradba/crontab
+%__sed --in-place -e 's/--report //' $RPM_BUILD_ROOT/etc/oradba/cron.d/oradba
 
 %pre
 %include %{pkg_functions}
@@ -118,7 +115,7 @@ postrm "redhat" "$action"
 %dir %attr(2770,oracle,oinstall) %logdir
 %dir %attr(2770,oracle,oinstall) %archivelogdir
 %dir %attr(2770,oracle,oinstall) %spooldir
-%dir %attr(2770,oracle,oinstall) /vsr/lib/oradba
+%dir %attr(2770,oracle,oinstall) /var/lib/oradba
 %config(noreplace) %attr(664,oracle,oinstall) /etc/oradba/*.conf
 %config(noreplace) %attr(664,oracle,oinstall) /etc/oradba/*.def
 %config %attr(664,oracle,oinstall) /etc/oradba/logrotate.d/*
