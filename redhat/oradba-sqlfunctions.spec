@@ -56,7 +56,7 @@ shell-скриптах поддержки и обслуживания СУБД O
 %__sed --in-place -e 's/--report //' $RPM_BUILD_ROOT/etc/oradba/cron.d/oradba
 
 %pre
-%include %{pkg_functions}
+%include %pkg_functions
   
 if [ $1 -eq 1 ] ; then
   action=install
@@ -116,6 +116,10 @@ postrm "redhat" "$action"
 %dir %attr(2770,oracle,oinstall) %archivelogdir
 %dir %attr(2770,oracle,oinstall) %spooldir
 %dir %attr(2770,oracle,oinstall) /var/lib/oradba
+%dir %attr(2775 oracle,oinstall) /etc/oradba
+%dir %attr(2775 oracle,oinstall) /etc/oradba/cron.d
+%dir %attr(2775 oracle,oinstall) /etc/oradba/cron.daily
+%dir %attr(2775 oracle,oinstall) /etc/oradba/logrotate.d
 %config(noreplace) %attr(664,oracle,oinstall) /etc/oradba/*.conf
 %config(noreplace) %attr(664,oracle,oinstall) /etc/oradba/*.def
 %config %attr(664,oracle,oinstall) /etc/oradba/logrotate.d/*
