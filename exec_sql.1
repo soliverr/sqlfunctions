@@ -1,35 +1,34 @@
-.TH "rias_exec_sql" "1" "05/04/2010" "User commands" "User commands"
+.TH "oradba\-exec\-sql" "1" "13/12/2013" "User commands" "User commands"
 .SH "NAME"
-rias_exec_sql \- Execute a SQL-query or a SQL-file in billing databases\.
+oradba\-exec\-sql \- Execute a SQL-query or a SQL-file in Oracle databases\.
 .SH "SYNOPSIS"
 .HP
-\fBrias_exec_sql\fR [\fI\-\-user DB_USER\fR] [\fI\-\-password PWD\fR] [\fI\-\-database DB\fR]
-       [\fI\-\-log-name LOGNAME\fR] [\fI\-\-log-mode LOGMODE\fR] [\fI\-\-log-dir LOGDIR\fR]
-       \fI"SQL-query|SQL-file"\fR [\fIArg1 \.\.\.\fR]
+\fBoradba\-exec\-sql\fR [\fI\-\-database DB\fR] [\fI\-\-user DB_USER\fR] [\fI\-\-password PWD\fR]
+         [\fI\-\-log\-dir LOGDIR\fR] [\fI\-\-log\-name LOGNAME\fR] [\fI\-\-log\-mode LOGMODE\fR]
+         \fI"SQL\-query|SQL\-file"\fR [\fIArg1 Arg2 \.\.\.\fR]
 .SH "DESCRIPTION"
-\fBrias_exec_sql\fR should be used to execute a SQL-query or SQL-file in billing databases\. \fBrias_exec_sql\fR commonly used in \fBcron\fR(8) tasks\.
+\fBoradba\-exec\-sql\fR should be used to execute a SQL\-query or SQL\-file in Oracle databases\. \fBoradba\-exec\-sql\fR commonly used in \fBcron\fR(8) tasks\.
 .PP
-\fBrias_exec_sql\fR has configuration in file \fI/opt/rias/etc/rias_exec_sql.conf\fR\.
+It can setup all \fBoradba\-exec\-sql\fR options in configuration file  \fI/etc/oradba/oradba\-exec\-sql.conf\fR\.
 .PP
-\fBrias_exec_sql\fR simplifies common actions while execute SQL-query:
+\fBoradba\-exec\-sql\fR simplifies common actions while execute SQL\-query:
 .PP
 .RS
 * connect to the target database;
 .br
 * safety storage database passwords in \fBOracle Password Repository\fR;
 .br
-* centarlized storage and rotation log-file of executing SQL-queries\.
+* centarlized storage and rotation log\-file of executing SQL\-queries\.
 .RE
 .SH "OPTIONS"
-.SS "Mandatory options"
+.SS "Mandatory arguments"
 .TP
 \fB\-u\fR, \fB\-\-user\fR DB_USER
-Database user to conect to\. This option should be present in configuration file or as command line option\.
-\fI/opt/rias/etc/rias_exec_sql.conf\fR\.
-.SS "Optional options"
+Database user to conect to\. This option should be present either in configuration file or in command line\.
+.SS "Optional arguments"
 .TP
 \fB\-p\fR, \fB\-\-password\fR DB_PWD
-Database password to connect to. Database passwords keeps in password repository \- \fBOracle Password Repository\fR, which mantains with \fBopr\fR\(8) utility\.
+Database password to connect to. Database passwords keeps in password repository \- \fBOracle Password Repository\fR, which mantains with \fBopr\fR(8) utility\.
 .TP
 \fB\-b\fR, \fB\-\-database\fR DB
 TNSAlias of target database\. Default is \fIlocal\fR\.
@@ -38,7 +37,7 @@ TNSAlias of target database\. Default is \fIlocal\fR\.
 Name of log\-file\. Default is autogenerate\. Logfiles created in LOGDIR.
 .TP
 \fB\-r\fR, \fB\-\-log\-dir\fR LOGDIR
-Directory to keep logfiles\. Default is \fI/opt/rias/log/rias_exec_sql\fR\.
+Directory to keep logfiles\. Default is \fI/var/log/oradba/exec\-sql\fR\.
 .TP
 \fB\-o\fR, \fB\-\-log\-mode\fR LOGMODE
 Select logger mode (default \fIauto\fR):
@@ -53,16 +52,16 @@ syslog \- logger for \fBSysLog\fR;
 file   \- plain logfile with \fBLogRotate\fR rotation\.
 .RE
 .IP
-Logger mode detects automatically or can be setted in configuration file or as comman line option\.
+Logger mode detects automatically or can be setted in configuration file or as command line option\.
 .HP
 \fBSQL\-query\fR \- SQL\-query to execute in a target database
 .HP
-\fBSQL\-скрипт\fR \- SQL\-file to execute in a target database
+\fBSQL\-script\fR \- SQL\-file to execute in a target database
 .IP
 [Arg1 Arg2 \.\.\.] \- optional argumants for SQL\-file
 .SH "CONFIGURATION"
 .PP
-Configuration paramaters stored in file \fI/opt/rias/etc/rias_exec_sql.conf\fR\.
+Configuration paramaters stored in file \fI/etc/oradba/oradba\-exec\-sql.conf\fR\.
 .TP
 \fBDB\fR
 Target database\.
@@ -74,13 +73,13 @@ Database user to connect to.
 Oracle NLS parameters\.
 .TP
 \fBLOG_FILE\fR
-Log\-file\.
+Name of Log\-file to write output and error streams\.
 .TP
 \fBLOG_MODE\fR
 Logger mode\.
 .TP
 \fBLOG_DIR\fR
-Logdir\.
+Logdir to keep log\-files\.
 .TP
 \fBOLD_LOG_KEEP_DAYS\fR
 Keep old log\-files in days\.
@@ -105,39 +104,48 @@ Database password to connect to\.
 Excutables to access to Oracle Password Repository\.
 .TP
 \fBSQLPLUS_FORMAT\fR
-User's file to format SQLPlus output\.
+User's file to format Oracle SQLPlus output\.
 .TP
 \fBLOG_DIR\fR
 Base directory for logfiles\.
 .SH "EXAMPLES"
 .SS "Execute SQL in cron"
 .IP
-*/5 * * * * /opt/rias/bin/rias_exec_sql "select 1 from dual"
+*/5 * * * * /usr/bin/oradba\-exec\-sql "select 1 from dual"
 .RS
 .IP
 Logname is generated as select_1_from_dual
 .RE
 .IP
-*/5 * * * * /opt/rias/bin/rias_exec_sql \-\-user TEST \-\-log\-name my\-log "select 1 from dual;"
+*/5 * * * * /usr/bin/oradba\-exec\-sql \-\-user TEST \-\-log\-name my\-log "select 1 from dual;"
 .RS
 .IP
 Logname my\-log
 .RE
 .SS "Execute in command line"
 .IP
-/opt/rias/bin/rias_exec_sql \-\-user test \-\-password test \-\-database TEST \-\-log\-dir /tmp \-\-log\-name test \-\-log\-mode file "select 1 from dual"
+/usr/bin/oradba\-exec\-sql \-\-user test \-\-password test \-\-database TEST \-\-log\-dir /tmp \-\-log\-name test \-\-log\-mode file "select 1 from dual"
 .IP
 Result will output in file /tmp/test\.
 .SH "AUTHOR"
 .PP
-Kryazhevskikh Sergey, oliver@ertelecom.ru
+Kryazhevskikh Sergey, <soliverr@gmail.com>
 .SH "FILES"
 .TP
-\fI/opt/rias/etc/rias_exec_sql.conf\fR
-Configuration parameters for \fBrias_exec_sql\fR\.
+\fI/etc/oradba/oradba\-exec\-sql.conf\fR
+Configuration parameters for \fBoradba\-exec\-sql\fR\.
+.TP
+\fI/etc/oradba/sqlfunctions.def\fR
+Oracle SQLPlus defines to format output\.
+.TP
+\fI/var/log/oradba/exec\-sql/oradba\-exec\-sql.log\fR
+Main log\-file to keep history of executed command\.
+.TP
+\fI/var/log/rias/oradba\-exec\-sql\fR
+Directory to keep log\-files\. It can be redefined by \-\-log\-dir command line argument or into configuration file.
 .SH "BUGS"
 .PP
-Erros should be reported through ITS \fBhttp://redmine.ertelecom.ru\fR\.
+Erros should be reported through ITS \fBhttp://sourceforge.net/oracledba\fR\.
 .SH "SEE ALSO"
 .PP
 \fBopr\fR(8)

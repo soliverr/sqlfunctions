@@ -1,34 +1,33 @@
-.TH "rias_exec_sql" "1" "05/04/2010" "Пользовательские команды" "Пользовательские команды"
+.TH "oradba\-exec\-sql" "1" "13/12/2013" "Пользовательские команды" "Пользовательские команды"
 .SH "НАЗВАНИЕ"
-rias_exec_sql \- Выполнить произвольную SQL-команду или SQL-скрипт в базе данных биллинга\.
+oradba\-exec\-sql \- Выполнить произвольную SQL\-команду или SQL\-скрипт в базе данных Oracle\.
 .SH "СИНТАКСИС"
 .HP
-\fBrias_exec_sql\fR [\fI\-\-user DB_USER\fR] [\fI\-\-password PWD\fR] [\fI\-\-database DB\fR]
-       [\fI\-\-log\-name LOGNAME\fR] [\fI\-\-log\-mode LOGMODE\fR] [\fI\-\-log\-dir LOGDIR\fR]
-       \fI"SQL\-запрос|SQL\-Скрипт"\fR [\fIАргумент1 \.\.\.\fR]
+\fBoradba\-exec\-sql\fR [\fI\-\-database DB\fR] [\fI\-\-user DB_USER\fR] [\fI\-\-password PWD\fR]
+         [\fI\-\-log\-dir LOGDIR\fR] [\fI\-\-log\-name LOGNAME\fR] [\fI\-\-log\-mode LOGMODE\fR]
+         \fI"SQL\-запрос|SQL\-Скрипт"\fR [\fIАргумент1 Аргумент2 \.\.\.\fR]
 .SH "ОПИСАНИЕ"
-Программа \fBrias_exec_sql\fR используется для выполнения произвольной SQL-команды или SQL-скрипта
-в базе данных биллинга\. Программа \fBrias_exec_sql\fR предназначена для упрощения и унификации запуска
-периодических SQL-команд посредством службы \fBcron\fR(8)\.
+Программа \fBoradba\-exec\-sql\fR используется для выполнения произвольной SQL\-команды или SQL\-скрипта
+в базах данных Oracle\. Программа \fBoradba\-exec\-sql\fR предназначена для упрощения и унификации запуска
+периодических SQL\-команд посредством службы \fBcron\fR(8)\.
 .PP
-Работа программы \fBrias_exec_sql\fR настраивается с помощью файла конфигурации \fI/opt/rias/etc/rias_exec_sql.conf\fR\.
+Работа программы \fBoradba\-exec\-sql\fR настраивается с помощью файла конфигурации \fI/etc/oradba/oradba\-exec\-sql.conf\fR\.
 .PP
-Программа \fBrias_exec_sql\fR создана для упрощения основных действий, необходимых при выполнении 
-произвольной SQL-команды в базе данных биллинга, а именно:
+Программа \fBoradba\-exec\-sql\fR создана для упрощения основных действий, необходимых при выполнении 
+произвольной SQL\-команды в базе данных Oracle, а именно:
 .PP
 .RS
 * подключение в целевую базу данных;
 .br
 * безопасное хранение паролей подключения в \fBOracle Password Repository\fR;
 .br
-* централизованное хранение и ротация лог-файлов работы SQL-команд\.
+* централизованное хранение и ротация лог\-файлов работы SQL\-команд\.
 .RE
 .SH "ПАРАМЕТРЫ"
 .SS "Обязательные параметры"
 .TP
 \fB\-u\fR, \fB\-\-user\fR DB_USER
 Пользователь для подключения в БД\. Данный параметр обязательно должен быть задан в коммандной строке или в файле конфигурации\.
-\fI/opt/rias/etc/rias_exec_sql.conf\fR\.
 .SS "Необязательные параметры"
 .TP
 \fB\-p\fR, \fB\-\-password\fR DB_PWD
@@ -42,7 +41,7 @@ TNSAlias целевой базы данных для подключения\. П
 Имя журнального файла для вывода результатов работы\. По умолчанию имя журнального лог\-файла генерируется автоматически\. Файлы создаются в каталоге \fBLOGDIR\fR\.
 .TP
 \fB\-r\fR, \fB\-\-log\-dir\fR LOGDIR
-Каталог для хранения журнальных файлов\. По умолчанию \fI/opt/rias/log/rias_exec_sql\fR\.
+Каталог для хранения журнальных файлов\. По умолчанию \fI/var/log/oradba/exec\-sql\fR\.
 .TP
 \fB\-o\fR, \fB\-\-log\-mode\fR LOGMODE
 Режим вывода в журнальный файл (по умолчанию \fIauto\fR):
@@ -66,22 +65,22 @@ file   \- вывод в файл, ротация осуществляется с
 [Аргумент1 Аргумент2 \.\.\.] \- необязательные аргументы для SQL\-скрипта
 .SH "КОНФИГУРАЦИЯ"
 .PP
-Параметры конфигурации задаются в файле \fI/opt/rias/etc/rias_exec_sql.conf\fR\.
+Параметры конфигурации задаются в файле \fI/etc/oradba/oradba\-exec\-sql.conf\fR\.
 .TP
 \fBDB\fR
 Целевая база данных для работы\.
 .TP
 \fBDB_USER\fR
-Пользователь, от имени которого выполняется SQL-скрипт или SQL-команда\.
+Пользователь, от имени которого выполняется SQL\-скрипт или SQL\-команда\.
 .TP
 \fBNLS_LANG\fR
-Задать локализацию при выполнении SQL-команд\.
+Задать локализацию при выполнении SQL\-команд\.
 .TP
 \fBLOG_FILE\fR
-Лог-файл по умолчанию\.
+Лог\-файл по умолчанию\.
 .TP
 \fBLOG_MODE\fR
-Принудительный режим вывода в лог-файлы\.
+Принудительный режим вывода в лог\-файлы\.
 .TP
 \fBLOG_DIR\fR
 Базовый каталог для хранения журнальных файлов\.
@@ -109,47 +108,51 @@ TNSAlias базы данных для доступа\.
 Программа доступа к репозитарию паролей Oracle\.
 .TP
 \fBSQLPLUS_FORMAT\fR
-Пользовательский файл для форматирования вывода SQL-запросов\.
+Пользовательский файл для форматирования вывода SQL\-запросов\.
 .TP
 \fBLOG_DIR\fR
-Базовый каталог журнальных файлов работы SQL-запрсов\.
+Базовый каталог журнальных файлов работы SQL\-запрсов\.
 .SH "ПРИМЕРЫ ИСПОЛЬЗОВАНИЯ"
 .SS "Запуск SQL из cron"
 .IP
-*/5 * * * * /opt/rias/bin/rias_exec_sql "select 1 from dual"
+*/5 * * * * /usr/bin/oradba\-exec\-sql "select 1 from dual"
 .RS
 .IP
 Каждые 5 минут будет выполнятся команда \fIselect 1 from dual\fR\. Параметры подключения (база данных, пользователь
-для подключения) читаются из файла конфигурации \fI/opt/rias/etc/rias_exec_sql.conf\fR\. Журнал выполнения создаётся
-в каталоге \fB/opt/rias/log/rias_exec_sql\fR\. Если задан режим вывода в файл \fILOG_MODE=file\fR, то будет автоматически
-генерироваться имя лог-файла \fIselect_1_from_dual\fR\.
+для подключения) читаются из файла конфигурации \fI/etc/oradba/oradba\-exec\-sql.conf\fR\. Журнал выполнения создаётся
+в каталоге \fB/var/log/oradba/exec\-sql\fR\. Если задан режим вывода в файл \fILOG_MODE=file\fR, то будет автоматически
+генерироваться имя лог\-файла \fIselect_1_from_dual\fR\.
 .RE
 .IP
-*/5 * * * * /opt/rias/bin/rias_exec_sql \-\-user TEST \-\-log\-name my\-log "select 1 from dual"
+*/5 * * * * /usr/bin/oradba\-exec\-sql \-\-user TEST \-\-log\-name my\-log "select 1 from dual"
 .RS
 .IP
 Каждые 5 минут будет выполнятся команда \fIselect 1 from dual\fR от имени пользователя \fBTEST\fR\. Параметры подключения (база данных)
-читаются из файла конфигурации \fI/opt/rias/etc/rias_exec_sql.conf\fR\. Журнал выполнения создаётся
-в каталоге \fB/opt/rias/log/rias_exec_sql/my\-log\fR, в режимах \fIrunit\fR или \fIdtools\fR; в виде файла \fB/opt/rias/log/rias_exec_sql/my\-log\.log\fR в режиме \fIfile\fR\, либо записывается в системные журналы в режиме \fIsyslog\fR.
+читаются из файла конфигурации \fI/etc/oradba/oradba\-exec\-sql.conf\fR\. Журнал выполнения создаётся
+в каталоге \fB/var/log/oradba/exec\-sql/my\-log\fR, в режимах \fIrunit\fR или \fIdtools\fR; в виде файла 
+\fB/var/log/oradba/exec\-sql/my\-log\.log\fR в режиме \fIfile\fR\, либо записывается в системные журналы в режиме \fIsyslog\fR.
 .RE
 .SS "Запуск из командной строки"
 .IP
-/opt/rias/bin/rias_exec_sql \-\-user test \-\-password test \-\-database TEST \-\-log\-dir /tmp \-\-log\-name test \-\-log\-mode file "select 1 from dual"
+/usr/bin/oradba\-exec\-sql \-\-user test \-\-password test \-\-database TEST \-\-log\-dir /tmp \-\-log\-name test \-\-log\-mode file "select 1 from dual"
 .IP
-Результат работы команды будет помещён в файл /tmp/test\.
+Результат работы команды будет помещён в лог\-файл \fB/tmp/test\fR\.
 .SH "АВТОР"
 .PP
-Кряжевских Сергей, oliver@ertelecom.ru; Воздвиженский Павел
+Кряжевских Сергей, <soliverr@gmail.com>
 .SH "ФАЙЛЫ"
 .TP
-\fI/opt/rias/etc/rias_exec_sql.conf\fR
-Содержит параметры для работы программы \fBrias_exec_sql\fR\.
+\fI/etc/oradba/oradba\-exec\-sql.conf\fR
+Содержит параметры для работы программы \fBoradba\-exec\-sql\fR\.
 .TP
-\fI/var/log/rias/rias_exec_sql/rias_exec_sql.log\fR
-Главный журнальный файл, содержащий историю запуска программы \fBrias_exec_sql\fR\. В данный файл записываются
+\fI/etc/oradba/sqlfunctions.def\fR
+Содержит команды форматирования и управления выводом для Oracle SQLPlus\.
+.TP
+\fI/var/log/oradba/exec\-sql/oradba\-exec\-sql.log\fR
+Главный журнальный файл, содержащий историю запуска программы \fBoradba\-exec\-sql\fR\. В данный файл записываются
 сообщения, если их невозможно поместить в указанный параметрами \fI\-\-log\-dir\fR и \fI\-\-log\-name\fR файл\.
 .TP
-\fI/var/log/rias/rias_exec_sql\fR
+\fI/var/log/rias/oradba\-exec\-sql\fR
 Каталог хранения журнальных файлов работы SQL\-команд или SQL\-скриптов, если не переопределён через параметр
 \-\-log\-dir или параметр файла конфигурации \fILOG_DIR\fR\.
 .SS "Общий доступ к журнальным файлам"
@@ -158,11 +161,11 @@ TNSAlias базы данных для доступа\.
 журнальный файл при работе от нескольких пользователей системы\.
 .PP
 При работе в режиме записи журнальных файлов \fIfile\fR необходимо обеспечить право записи в журнальный файл
-для всех пользователей, которым необходимо выполнять SQL-\команду и записывать результаты исполнения в один и
+для всех пользователей, которым необходимо выполнять SQL\-команду и записывать результаты исполнения в один и
 тот же журнальный файл\.
 .SH "ОШИБКИ"
 .PP
-Об ошибках сообщайте через систему контроля ошибок \fBhttp://redmine.ertelecom.ru\fR\.
+Об ошибках сообщайте через систему контроля ошибок \fBhttp://sourceforge.net/oracledba\fR\.
 .SH "СМОТРИТЕ ТАКЖЕ"
 .PP
 \fBopr\fR(8)
