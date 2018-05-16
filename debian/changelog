@@ -1,3 +1,9 @@
+oradba-sqlfunctions (2.2-2) stable; urgency=low
+
+  * Small fix in _attr function of package installation scripts
+
+ -- Kryazhevskikh Sergey <soliverr@gmail.com>  Wed, 16 May 2018 10:48:05 +0500
+
 oradba-sqlfunctions (2.2-1) stable; urgency=low
 
   * Public release of package
