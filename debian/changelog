@@ -1,3 +1,9 @@
+oradba-sqlfunctions (2.2-3) stable; urgency=low
+
+  * Fix check condition in _attr function of package installation scripts
+
+ -- Kryazhevskikh Sergey <soliverr@gmail.com>  Wed, 16 May 2018 15:11:58 +0500
+
 oradba-sqlfunctions (2.2-2) stable; urgency=low
 
   * Small fix in _attr function of package installation scripts
